@@ -192,13 +192,6 @@
       esriId.registerOAuthInfos([info]);
 
       document.getElementById("signIn").addEventListener("click", function() {
-        esriId
-        .checkSignInStatus(info.portalUrl + "/sharing")
-        .then(function() {
-          displayItems();
-        })
-        .catch(/*give user an option to sign in*/);
-
         const creds = esriId.getCredential(info.portalUrl + "/sharing");
         console.log(creds)
       });
