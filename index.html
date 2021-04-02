@@ -1,2 +1,948 @@
-# pittcoforecasting.github.io
-Public repo for developing the Pittsylvania Co. Forecasting tool.
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Pittsylvania County Utilities Dashboard</title>
+  <style>
+    html,
+    body {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    #viewDiv {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 50px;
+      bottom: 0;
+    }
+
+    .header {
+      background-color: black;
+      opacity: 0.75;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 50px;
+      color: white;
+    }
+
+    #content {
+      margin-left: 20px;
+      margin-top: 5px;
+    }
+
+    /* #viewDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    } */
+
+    #paneDiv {
+      min-width: 200px;
+      padding: 8px;
+      background-color: rgba(255, 255, 255, 1.0);
+      border: 1px solid white;
+      color: black;
+    }
+
+    .esri-ui-top-right {
+      max-height: 100%;
+    }
+
+    #queryDiv,
+    #resultDiv {
+      min-width: 250px;
+      font-size: 14px;
+      padding: 10px;
+      display: none;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .geometry-options {
+      display: flex;
+      flex-direction: row;
+    }
+
+    .geometry-button {
+      flex: 1;
+      border-style: solid;
+      border-width: 1px;
+      border-image: none;
+    }
+
+    .geometry-button-selected {
+      background: #4c4c4c;
+      color: #fff;
+    }
+
+    .count {
+      white-space: nowrap;
+      font-size: 14px;
+      font-weight: bold;
+      display: inline-block;
+    }
+
+    .esri-editor .esri-item-list__scroller {
+      max-height: 350px;
+    }
+
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
+  <link rel="stylesheet" href="https://js.arcgis.com/4.18/esri/themes/light/main.css">
+  <script src="https://js.arcgis.com/4.18/"></script>
+
+  <script>
+    require([
+      "esri/config",
+      "esri/WebMap",
+      "esri/views/MapView",
+      "esri/layers/FeatureLayer",
+      "esri/widgets/Sketch/SketchViewModel",
+      "esri/layers/GraphicsLayer",
+      "esri/widgets/Expand",
+      "esri/widgets/Legend",
+      "esri/core/promiseUtils",
+      "esri/renderers/UniqueValueRenderer",
+      "esri/renderers/ClassBreaksRenderer",
+      "esri/widgets/BasemapToggle",
+      "esri/widgets/Editor",
+      "esri/portal/Portal",
+      "esri/identity/OAuthInfo",
+      "esri/identity/IdentityManager",
+      "esri/portal/PortalQueryParams"
+
+    ], function (esriConfig, WebMap, MapView, FeatureLayer, SketchViewModel, GraphicsLayer, Expand, Legend,
+      promiseUtils, UniqueValueRenderer, ClassBreaksRenderer, BasemapToggle, Editor, Portal, OAuthInfo, esriId,
+      PortalQueryParams) {
+
+      // var info = new OAuthInfo({
+      //   // Swap this ID out with registered application ID
+      //   appId: "71f618cdbf414cc19663b0fe5f2fef20",
+      //   // Uncomment the next line and update if using your own portal
+      //   // portalUrl: "https://<host>:<port>/arcgis"
+      //   // Uncomment the next line to prevent the user's signed in state from being shared with other apps on the same domain with the same authNamespace value.
+      //   // authNamespace: "portal_oauth_inline",
+      //   popup: false
+      // });
+
+      // esriId.registerOAuthInfos([info]);
+
+      // esriId
+      //   .checkSignInStatus(info.portalUrl + "/sharing")
+      //   .then(function() {
+      //     displayItems();
+      //   })
+      //   .catch(/*give user an option to sign in*/);
+
+      const sketchLayer = new GraphicsLayer();
+
+      const map = new WebMap({
+        portalItem: {
+          id: "71f618cdbf414cc19663b0fe5f2fef20"
+        }
+      });
+
+      const view = new MapView({
+        container: "viewDiv",
+        map: map
+      });
+
+      view.map.add(sketchLayer);
+      document.getElementById('queryDiv').style.display = "block";
+      view.ui.add(queryDiv, 'bottom-left');
+      view.ui.add(resultDiv, "top-right");
+
+      let sceneLayer = null;
+      let sceneLayerView = null;
+
+      
+
+      // DEFINE SYMBOLOGY
+      const zone_Ag = {
+        type: "simple-fill",
+        color: [211, 255, 190, 0.4],
+        style: "solid",
+        outline: {
+          width: 0.2,
+          color: [55, 55, 55, 0.4]
+        }
+      };
+      const zone_BusLTD = {
+        type: "simple-fill",
+        color: [161, 0, 80, 0.4],
+        style: "solid",
+        outline: {
+          width: 0.2,
+          color: [55, 55, 55, 0.4]
+        }
+      };
+      const zone_BusGen = {
+        type: "simple-fill",
+        color: [79, 50, 0, 0.4],
+        style: "solid",
+        outline: {
+          width: 0.2,
+          color: [55, 55, 55, 0.4]
+        }
+      };
+      const zone_Conservation = {
+        type: "simple-fill",
+        color: [212, 94, 0, 0.4],
+        style: "solid",
+        outline: {
+          width: 0.2,
+          color: [55, 55, 55, 0.4]
+        }
+      };
+      const zone_Double = {
+        type: "simple-fill",
+        color: [25, 171, 0, 0.4],
+        style: "solid",
+        outline: {
+          width: 0.2,
+          color: [55, 55, 55, 0.4]
+        }
+      };
+      const zone_IndLight = {
+        type: "simple-fill",
+        color: [131, 0, 173, 0.4],
+        style: "solid",
+        outline: {
+          width: 0.2,
+          color: [55, 55, 55, 0.4]
+        }
+      };
+      const zone_IndHeavy = {
+        type: "simple-fill",
+        color: [155, 0, 33, 0.4],
+        style: "solid",
+        outline: {
+          width: 0.2,
+          color: [55, 55, 55, 0.4]
+        }
+      };
+      const zone_ResMfdHousingPark = {
+        type: "simple-fill",
+        color: [172, 227, 0, 0.4],
+        style: "solid",
+        outline: {
+          width: 0.2,
+          color: [55, 55, 55, 0.4]
+        }
+      };
+      const zone_ResSub = {
+        type: "simple-fill",
+        color: [0, 21, 115, 0.4],
+        style: "solid",
+        outline: {
+          width: 0.2,
+          color: [55, 55, 55, 0.4]
+        }
+      };
+      const zone_ResCombSubdv = {
+        type: "simple-fill",
+        color: [0, 33, 20, 0.4],
+        style: "solid",
+        outline: {
+          width: 0.2,
+          color: [55, 55, 55, 0.4]
+        }
+      };
+      const zone_ResEstates = {
+        type: "simple-fill",
+        color: [46, 48, 0, 0.4],
+        style: "solid",
+        outline: {
+          width: 0.2,
+          color: [55, 55, 255, 0.4]
+        }
+      };
+      const zone_ResMF = {
+        type: "simple-fill",
+        color: [237, 83, 0, 0.4],
+        style: "solid",
+        outline: {
+          width: 0.2,
+          color: [55, 55, 55, 0.4]
+        }
+      };
+      const zone_RPD = {
+        type: "simple-fill",
+        color: [234, 0, 137, 0.4],
+        style: "solid",
+        outline: {
+          width: 0.2,
+          color: [55, 55, 55, 0.4]
+        }
+      };
+      const zone_Town = {
+        type: "simple-fill",
+        color: [194, 150, 0, 0.4],
+        style: "solid",
+        outline: {
+          width: 0.2,
+          color: [55, 55, 55, 0.4]
+        }
+      };
+      const zone_Unknown = {
+        type: "simple-fill",
+        color: [76, 27, 0, 0.4],
+        style: "solid",
+        outline: {
+          width: 0.2,
+          color: [55, 55, 55, 0.4]
+        }
+      };
+
+      const activeWater = {
+        type: "simple-fill",
+        color: [0, 255, 255, 0.4],
+        style: "solid",
+        outline: {
+          width: 0.1,
+          color: [55, 55, 55, 0.25]
+        }
+      };
+      
+      const activeSewer = {
+        type: "simple-fill",
+        color: [0, 255, 0, 0.4],
+        style: "solid",
+        outline: {
+          width: 0.1,
+          color: [55, 55, 55, 0.25]
+        }
+      };
+      
+      const bothUtilities = {
+        type: "simple-fill",
+        color: [152, 0, 255, 0.25],
+        style: "solid",
+        outline: {
+          width: 0.2,
+          color: [55, 55, 55, 0.4]
+        }
+      };
+
+      const noUtilities = {
+        type: "simple-fill",
+        color: [255, 255, 255, 0.1],
+        style: "solid",
+        outline: {
+          width: 0.2,
+          color: [55, 55, 55, 0.4]
+        }
+      };
+
+      const utilitiesRender = {
+        type: "unique-value",
+        field: "sewerAndWater",
+        defaultSymbol: {
+          type: "simple-fill",
+          color: "white",
+          outline: {
+            width: 0.05,
+            color: [50, 50, 50, 0.4]
+          }
+        },
+        uniqueValueInfos: [{
+          value: "Yes",
+          symbol: bothUtilities
+        }, {
+          value: "No",
+          symbol: noUtilities
+        }]
+      };
+      
+      // construct utilities renderer
+      const waterRenderer = {
+        type: "unique-value",
+        field: "waterUser",
+        defaultSymbol: {
+          type: "simple-fill",
+          color: "white",
+          outline: {
+            width: 0.05,
+            color: [50, 50, 50, 0.05]
+          }
+        },
+        uniqueValueInfos: [{
+          value: "Yes",
+          symbol: activeWater
+        }, {
+          value: "No",
+          symbol: noUtilities
+        }]
+      };
+
+      const sewerRenderer = {
+        type: "unique-value",
+        field: "sewerUser",
+        defaultSymbol: {
+          type: "simple-fill",
+          color: "white",
+          outline: {
+            width: 0.05,
+            color: [50, 50, 50, 0.05]
+          }
+        },
+        uniqueValueInfos: [{
+          value: "Yes",
+          symbol: activeSewer
+        }, {
+          value: "No",
+          symbol: noUtilities
+        }]
+      };
+
+
+      //NEED TO ADD UTILITY RENDERER TO SHOW PARCELS WITH BOTH SERVICES
+      //LIKELY NEED TO MAKE COMBINED COLUMN? OR CAN WE QUERY BOTH?
+
+      // construct zoning renderer
+      const zoningRenderer = {
+        type: "unique-value",
+        field: "zone",
+        defaultSymbol: {
+          type: "simple-fill", // autocasts as new SimpleFillSymbol()
+          style: "backward-diagonal",
+          outline: {
+            width: 0.4,
+            color: [50, 50, 50, 0.6]
+          }
+        },
+        uniqueValueInfos: [{
+          value: "A-1",
+          symbol: zone_Ag
+        }, {
+          value: "B-1",
+          symbol: zone_BusLTD
+        }, {
+          value: "B-2",
+          symbol: zone_BusGen
+        }, {
+          value: "C-1",
+          symbol: zone_Conservation
+        }, {
+          value: "DZ",
+          symbol: zone_Double
+        }, {
+          value: "M-1",
+          symbol: zone_IndLight
+        }, {
+          value: "M-2",
+          symbol: zone_IndHeavy
+        }, {
+          value: "MHP",
+          symbol: zone_ResMfdHousingPark
+        }, {
+          value: "R-1",
+          symbol: zone_ResSub
+        }, {
+          value: "RC-1",
+          symbol: zone_ResCombSubdv
+        }, {
+          value: "RE",
+          symbol: zone_ResEstates
+        }, {
+          value: "RMF",
+          symbol: zone_ResMF
+        }, {
+          value: "RPD",
+          symbol: zone_RPD
+        }, {
+          value: "TZ",
+          symbol: zone_Town
+        }, {
+          value: "UK",
+          symbol: zone_Unknown
+        }]
+      };
+
+      var renderersByField = {
+        ZONING: zoningRenderer,
+        WATER: waterRenderer,
+        SEWER: sewerRenderer,
+        UTILITIES: utilitiesRender
+      }
+
+      //Generates renderers based on the input field name.
+
+      function getRenderer(fieldName) {
+        // If the renderer is already generated, then return it
+        if (renderersByField[fieldName]) {
+          return promiseUtils.resolve(renderersByField[fieldName]);
+        }
+
+        if (fieldName === "ZONING") {
+          return zoningRenderer
+        };
+        if (fieldName === "WATER") {
+          return waterRenderer
+        };
+        if (fieldName === "SEWER") {
+          return sewerRenderer
+        };
+        if (fieldName == "UTILITIES") {
+          return utilitiesRender
+        }
+      };
+
+      map.load().then(function () {
+        inputLayer = map.allLayers.find(function (layer) {
+          return layer.title === "sewer_and_water"
+        });
+
+        console.log(inputLayer.queryFeatures().then(function (results) {
+          console.log(results)
+        }));
+               
+        map.remove(inputLayer);
+        const copyLayer = JSON.parse(JSON.stringify(inputLayer));
+        sceneLayer = new FeatureLayer(copyLayer);
+        map.add(sceneLayer, -1);
+
+        
+        sceneLayer.outFields = ["waterUser", "sewerUser", "sewerAndWater", "waterUsage", "zone"];
+        sceneLayer.renderer = zoningRenderer
+        view.whenLayerView(sceneLayer).then(function (layerView) {
+          sceneLayerView = layerView;
+        });
+        
+        const legend = new Legend({
+          view: view,
+          layerInfos: [{
+            layer: sceneLayer,
+            title: 'Pittsylvania County Utilities Dashboard Legend'
+          }]
+        });
+
+        const basemapToggle = new BasemapToggle({
+          view: view,
+          content: basemapGalleryDiv,
+          nextBasemap: 'hybrid',
+        });
+
+        basemapExpand = new Expand({
+          view: view,
+          content: basemapToggle,
+          group: "upper_left_expand",
+          expandIconClass: 'esri-icon-basemap'
+        })
+        legendExpand = new Expand({
+          view: view,
+          content: legend,
+          group: "upper_left_expand"
+        });
+        radioExpand = new Expand({
+          view: view,
+          content: paneDiv,
+          expandIconClass: 'esri-icon-layers',
+          group: 'upper_left_expand'
+        });
+        view.ui.add([legendExpand, basemapExpand, radioExpand], "top-left")
+      });
+
+      var radios = document.getElementsByName("renderer");
+
+      for (var i = 0; i < radios.length; i++) {
+        radios[i].addEventListener("change", function (event) {
+          var fieldName = event.target.value;
+          getRenderer(fieldName)
+            .then(function (renderer) {
+              sceneLayer.renderer = renderer;
+            })
+            .catch(function (error) {
+              console.log("error: ", error);
+            });
+        })
+      };
+
+      // use SketchViewModel to draw polygons that are used as a query
+      let sketchGeometry = null;
+      const sketchViewModel = new SketchViewModel({
+        layer: sketchLayer,
+        defaultUpdateOptions: {
+          tool: "reshape",
+          toggleToolOnClick: false
+        },
+        view: view,
+        defaultCreateOptions: {
+          hasZ: false
+        }
+      });
+      sketchViewModel.on("create", function (event) {
+        if (event.state === "complete") {
+          sketchGeometry = event.graphic.geometry;
+          runQuery();
+        }
+      });
+
+      sketchViewModel.on("update", function (event) {
+        if (event.state === "complete") {
+          sketchGeometry = event.graphics[0].geometry;
+          runQuery();
+        }
+      });
+      document
+        .getElementById("polygon-geometry-button")
+        .addEventListener("click", geometryButtonsClickHandler);
+      document
+        .getElementById("point-geometry-button")
+        .addEventListener("click", geometryButtonsClickHandler)
+
+      function geometryButtonsClickHandler(event) {
+        const geometryType = event.target.value;
+        clearGeometry();
+        sketchViewModel.create(geometryType);
+      }
+      document
+        .getElementById("clearGeometry")
+        .addEventListener("click", clearGeometry);
+
+      // Clear the geometry and set the default renderer
+      function clearGeometry() {
+        sketchGeometry = null;
+        sketchViewModel.cancel();
+        sketchLayer.removeAll();
+        clearHighlighting();
+        document.getElementById('resultDiv').style.display = "none";
+      }
+      var highlightHandle = null;
+
+      function clearHighlighting() {
+        if (highlightHandle) {
+          highlightHandle.remove();
+          highlightHandle = null;
+        };
+      };
+
+      // set the geometry query on the visible view
+      var debouncedRunQuery = promiseUtils.debounce(function () {
+        if (!sketchGeometry) {
+          return;
+        }
+        document.getElementById('resultDiv').style.display = "block";
+        return promiseUtils.eachAlways([
+          queryStatistics(),
+          updateSceneLayer()
+        ]);
+      });
+
+      function runQuery() {
+        debouncedRunQuery().catch((error) => {
+          if (error.name === "AbortError") {
+            return;
+          }
+          console.error(error);
+        })
+      }
+      var highlightHandle = null;
+
+      function clearHighlighting() {
+        if (highlightHandle) {
+          highlightHandle.remove();
+          highlightHandle = null;
+        }
+      }
+
+      function highlightBuildings(objectIds) {
+        // Remove any previous highlighting
+        clearHighlighting();
+        const objectIdField = sceneLayer.objectIdField;
+        document.getElementById("count").innerHTML = objectIds.length;
+
+        highlightHandle = sceneLayerView.highlight(objectIds);
+      }
+
+      function updateSceneLayer() {
+        const query = sceneLayerView.createQuery();
+        query.geometry = sketchGeometry;
+        return sceneLayerView
+          .queryObjectIds(query)
+          .then(highlightBuildings);
+      }
+
+      var waterChart = null;
+      var sewerChart = null;
+      var waterUsageChart = null;
+
+      function queryStatistics() {
+        const statDefinitions = [{
+            onStatisticField: "CASE WHEN waterUser = 1 THEN 1 ELSE 0 END",
+            outStatisticFieldName: "waterUserCount",
+            statisticType: "sum"
+          },
+          {
+            onStatisticField: "CASE WHEN waterUser = 0  THEN 1 ELSE 0 END",
+            outStatisticFieldName: "noWaterCount",
+            statisticType: "sum"
+          },
+          {
+            onStatisticField: "CASE WHEN sewerUser = 1  THEN 1 ELSE 0 END",
+            outStatisticFieldName: "sewerUserCount",
+            statisticType: "sum"
+          },
+          {
+            onStatisticField: "CASE WHEN sewerUser = 0 THEN 1 ELSE 0 END",
+            outStatisticFieldName: "noSewerCount",
+            statisticType: "sum"
+          },
+          {
+            onStatisticField: "waterUsage",
+            outStatisticFieldName: "totalWaterUsage",
+            statisticType: "sum"
+          },
+        ];
+        const query = sceneLayerView.createQuery();
+        query.geometry = sketchGeometry;
+        query.outStatistics = statDefinitions;
+
+        return sceneLayerView.queryFeatures(query).then(function (result) {
+          const allStats = result.features[0].attributes;
+          updateChart(waterChart, [
+            allStats.waterUserCount,
+            allStats.noWaterCount,
+          ]);
+          updateChart(sewerChart, [
+            allStats.sewerUserCount,
+            allStats.noSewerCount
+          ]);
+          updateChart(waterUsageChart, [
+            allStats.totalWaterUsage
+          ]);
+        }, console.error);
+      }
+      // Updates the given chart with new data
+      function updateChart(chart, dataValues) {
+        chart.data.datasets[0].data = dataValues;
+        chart.update();
+      }
+
+      function createWaterUserChart() {
+
+        const waterCanvas = document.getElementById("water-chart");
+        waterChart = new Chart(waterCanvas.getContext("2d"), {
+          type: "horizontalBar",
+          data: {
+            labels: [
+              "Water Service",
+              "No Water Service",
+            ],
+            datasets: [{
+              value: "Water (# Customers)",
+              backgroundColor: "#149dcf",
+              stack: "Stack 0",
+              data: [0, 0]
+            }]
+          },
+          options: {
+            responsive: false,
+            legend: {
+              display: false
+            },
+            title: {
+              display: true,
+              text: "Water (# Customers)"
+            },
+            scales: {
+              xAxes: [{
+                stacked: true,
+                ticks: {
+                  beginAtZero: true,
+                  precision: 0
+                }
+              }],
+              yAxes: [{
+                stacked: false
+              }]
+            }
+          }
+        });
+      }
+
+      function createWaterUsageChart() {
+
+      const waterUsageCanvas = document.getElementById("water-usage-chart");
+      waterUsageChart = new Chart(waterUsageCanvas.getContext("2d"), {
+        type: "horizontalBar",
+        data: {
+          labels: [
+            "Total Water Usage"
+          ],
+          datasets: [{
+            value: "Total Water Usage in Selection",
+            backgroundColor: "#149dcf",
+            data: [0]
+          }]
+        },
+        options: {
+          responsive: false,
+          legend: {
+            display: false
+          },
+          title: {
+            display: true,
+            text: "Total Water Usage in Selection"
+          },
+          tooltips: {
+          callbacks: {
+                label: function(tooltipItem, data) {
+                    var value = data.datasets[0].data[tooltipItem.index];
+                    if(parseInt(value) >= 1000){
+                               return Math.round(value).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                            } else {
+                               return value;
+                            }
+                }
+          } // end callbacks:
+        },
+        scales: {
+        xAxes: [{
+          ticks: {
+            beginAtZero: true,
+            callback: function(value, index, values) {
+              if(parseInt(value) >= 1000){
+                return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+              } else {
+                return value;
+              }
+            }
+          }
+        }]
+      }
+      }});}
+
+      function createSewerChart() {
+        const sewerCanvas = document.getElementById("sewer-chart");
+        sewerChart = new Chart(sewerCanvas.getContext("2d"), {
+          type: "doughnut",
+          data: {
+            labels: ["Sewer", "No Sewer"],
+            datasets: [{
+              backgroundColor: [
+                "#FD7F6F",
+                "#7EB0D5",
+              ],
+              borderWidth: 0,
+              data: [0, 0]
+            }]
+          },
+          options: {
+            responsive: false,
+            cutoutPercentage: 35,
+            legend: {
+              position: "bottom"
+            },
+            title: {
+              display: true,
+              text: "Sewer (# Customers)"
+            }
+          }
+        });
+      }
+
+      function clearCharts() {
+        updateChart(waterChart, [0, 0]);
+        updateChart(sewerChart, [0, 0]);
+        updateChart(waterUsageChart, [0])
+        document.getElementById("count").innerHTML = 0;
+      }
+
+      createWaterUserChart();
+      createSewerChart();
+      createWaterUsageChart();
+
+      // Loop through webmap layers and set an EditConfig for each
+      // view.map.layers.forEach(function (layer) {
+      //   console.log(layer.title)
+      //   if (layer.title === "sewer_and_water") {
+      //     // Specify a few of the fields to edit within the form
+      //     editCustomerData = {
+      //       layer: layer,
+      //       fieldConfig: {
+      //         name: "zone",
+      //         label: "Zoning"
+      //       }
+            
+      //     };
+      //   }
+      // });
+      // Create the Editor
+      let editor = new Editor({
+          view: view,
+          // Pass in the configurations created above
+          // layerInfos: editCustomerData,
+        });
+
+      view.ui.add(editor, "top-right");
+
+      
+    });
+
+    
+
+
+  </script>
+
+</head>
+
+<body>
+  <div class="header">
+    <div id="content" style="font-size: 32px; font-family: Arial; font-weight: 150;">Pittsylvania County Utilities
+      Sandbox</div>
+  </div>
+  <div id="viewDiv"></div>
+  <div id="queryDiv" class="esri-widget">
+    <b>Query by geometry</b><br />
+    <br />Draw a geometry to query by:
+    <div class="geometry-options">
+      <button class="esri-widget--button esri-icon-map-pin geometry-button" id="point-geometry-button" value="point"
+        title="Query By Individual Parcel"></button>
+      <button class="esri-widget--button esri-icon-polygon geometry-button" id="polygon-geometry-button" value="polygon"
+        title="Query by polygon"></button>
+    </div>
+    <br />
+    <button class="esri-button" id="clearGeometry" type="button">
+      Clear
+    </button>
+  </div>
+  <div id="resultDiv" class="esri-widget">
+    <div class="count">
+      Selected Parcels:
+      <div class="count" id="count">0</div>
+    </div>
+    <div class="charts">
+      <div>
+        <canvas id="water-usage-chart" height="250" width="260" />
+      </div>
+      <div>
+        <canvas id="water-chart" height="250" width="260" />
+      </div>
+      <div>
+        <canvas id="sewer-chart" width="250" height="300" />
+      </div>
+      
+    </div>
+  </div>
+  <div id="paneDiv" class="esri-widget">
+    <p>Please Select A Symbology Category:</p>
+    <input type="radio" name="renderer" value="ZONING" checked /> Zoning<br />
+    <input type="radio" name="renderer" value="WATER" /> Water<br />
+    <input type="radio" name="renderer" value="SEWER" /> Sewer<br />
+    <input type="radio" name="renderer" value="UTILITIES" /> Water and Sewer<br />
+  </div>
+  <div id="editorDiv"></div>
+  <div id="basemapGalleryDiv"></div>
+</body>
+
+</html>
