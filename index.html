@@ -198,6 +198,10 @@
         })
         .catch(/*give user an option to sign in*/);
 
+      const creds = esriId.getCredential(info.portalUrl + "/sharing");
+      console.log(creds)
+
+
       const sketchLayer = new GraphicsLayer();
 
       const map = new WebMap({
