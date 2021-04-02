@@ -95,8 +95,44 @@
       max-height: 350px;
     }
 
+    #startForecast {
+      width: 250;
+      height: 32;
+      background-color: #0079c1;
+      border: #0079c1;
+      color: #ffffff;
+    }
+
+    .tooltip {
+      position: relative;
+      display: inline-block;
+      border-bottom: 1px dotted black;
+      cursor: disabled;
+    }
+
+    .tooltip .tooltiptext {
+      visibility: hidden;
+      width: 250px;
+      background-color: black;
+      color: #fff;
+      text-align: center;
+      border-radius: 6px;
+      padding: 5px 0;
+      top: 25%;
+      left: 0%;
+
+      /* Position the tooltip */
+      position: absolute;
+      z-index: 1;
+    }
+
+    .tooltip:hover .tooltiptext {
+      visibility: visible;
+    }
+
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js" ></script>
   <link rel="stylesheet" href="https://js.arcgis.com/4.18/esri/themes/light/main.css">
   <script src="https://js.arcgis.com/4.18/"></script>
 
@@ -156,6 +192,15 @@
         map: map
       });
 
+
+      // // SEE THIS FOR AUTH STUFF!
+      // // enable button
+      // document.getElementById("startForecast").disabled = false;
+      // // remove tooltip 
+      // document.getElementById("startForecastDiv").classList.remove("tooltip");
+      // // hide tooltip text
+      // document.getElementById("tooltiptextid").hidden = true
+
       view.map.add(sketchLayer);
       document.getElementById('queryDiv').style.display = "block";
       view.ui.add(queryDiv, 'bottom-left');
@@ -163,8 +208,6 @@
 
       let sceneLayer = null;
       let sceneLayerView = null;
-
-      
 
       // DEFINE SYMBOLOGY
       const zone_Ag = {
@@ -678,22 +721,22 @@
 
       function queryStatistics() {
         const statDefinitions = [{
-            onStatisticField: "CASE WHEN waterUser = 1 THEN 1 ELSE 0 END",
+            onStatisticField: "CASE WHEN waterUser = 'Yes' THEN 1 ELSE 0 END",
             outStatisticFieldName: "waterUserCount",
             statisticType: "sum"
           },
           {
-            onStatisticField: "CASE WHEN waterUser = 0  THEN 1 ELSE 0 END",
+            onStatisticField: "CASE WHEN waterUser = 'No' THEN 1 ELSE 0 END",
             outStatisticFieldName: "noWaterCount",
             statisticType: "sum"
           },
           {
-            onStatisticField: "CASE WHEN sewerUser = 1  THEN 1 ELSE 0 END",
+            onStatisticField: "CASE WHEN sewerUser = 'Yes'  THEN 1 ELSE 0 END",
             outStatisticFieldName: "sewerUserCount",
             statisticType: "sum"
           },
           {
-            onStatisticField: "CASE WHEN sewerUser = 0 THEN 1 ELSE 0 END",
+            onStatisticField: "CASE WHEN sewerUser = 'No' THEN 1 ELSE 0 END",
             outStatisticFieldName: "noSewerCount",
             statisticType: "sum"
           },
@@ -878,13 +921,13 @@
       //   }
       // });
       // Create the Editor
-      let editor = new Editor({
-          view: view,
-          // Pass in the configurations created above
-          // layerInfos: editCustomerData,
-        });
+      // let editor = new Editor({
+      //     view: view,
+      //     // Pass in the configurations created above
+      //     // layerInfos: editCustomerData,
+      //   });
 
-      view.ui.add(editor, "top-right");
+      // view.ui.add(editor, "top-right");
 
       
     });
@@ -915,6 +958,13 @@
     <button class="esri-button" id="clearGeometry" type="button">
       Clear
     </button>
+    <br />
+    <div class = 'tooltip' id = 'startForecastDiv'>
+    <button class="esri-button" id="startForecast" type = "button" disabled>
+      Make Projections
+      <span class="tooltiptext" id = "tooltiptextid" >Please sign in to use this feature.</span>
+    </button>
+    </div>
   </div>
   <div id="resultDiv" class="esri-widget">
     <div class="count">
@@ -941,7 +991,7 @@
     <input type="radio" name="renderer" value="SEWER" /> Sewer<br />
     <input type="radio" name="renderer" value="UTILITIES" /> Water and Sewer<br />
   </div>
-  <div id="editorDiv"></div>
+  <!-- <div id="editorDiv"></div> -->
   <div id="basemapGalleryDiv"></div>
 </body>
 
