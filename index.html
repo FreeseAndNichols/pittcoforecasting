@@ -184,6 +184,8 @@
       promiseUtils, UniqueValueRenderer, ClassBreaksRenderer, BasemapToggle, Editor, Portal, OAuthInfo, esriId,
       PortalQueryParams) {
 
+      esriId.destroyCredentials();
+
       var info = new OAuthInfo({
         appId: "aBA2fHwkOHXJYtax",
         popup: false
