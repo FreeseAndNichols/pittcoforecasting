@@ -193,7 +193,7 @@
 
       document.getElementById("signIn").addEventListener("click", function() {
         const creds = esriId.getCredential(info.portalUrl + "/sharing");
-        console.log(creds['Promise'][['PromiseResult']])
+        console.log(creds['Promise'])
       });
 
       const sketchLayer = new GraphicsLayer();
