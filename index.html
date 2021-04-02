@@ -184,23 +184,24 @@
       promiseUtils, UniqueValueRenderer, ClassBreaksRenderer, BasemapToggle, Editor, Portal, OAuthInfo, esriId,
       PortalQueryParams) {
 
-      var info = new OAuthInfo({
-        appId: "aBA2fHwkOHXJYtax",
-        popup: false
-      });
+      document.getElementById("signIn").addEventListener("click", function() {
+        var info = new OAuthInfo({
+          appId: "aBA2fHwkOHXJYtax",
+          popup: false
+        });
 
-      esriId.registerOAuthInfos([info]);
+        esriId.registerOAuthInfos([info]);
 
-      esriId
+        esriId
         .checkSignInStatus(info.portalUrl + "/sharing")
         .then(function() {
           displayItems();
         })
         .catch(/*give user an option to sign in*/);
 
-      const creds = esriId.getCredential(info.portalUrl + "/sharing");
-      console.log(creds)
-
+        const creds = esriId.getCredential(info.portalUrl + "/sharing");
+        console.log(creds)
+      });
 
       const sketchLayer = new GraphicsLayer();
 
@@ -966,7 +967,7 @@
   <header class="header">
     <div id="content" style="font-size: 32px; font-family: Arial; font-weight: 150;">Pittsylvania County Utilities Sandbox</div>
     <nav class="main-nav">
-      <button class = "navItem"><b>Sign-in</b></button>
+      <button class = "navItem" id = "signIn"><b>Sign-in</b></button>
     </nav>
   </header>
   <div id="viewDiv"></div>
