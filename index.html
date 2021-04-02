@@ -184,14 +184,14 @@
       promiseUtils, UniqueValueRenderer, ClassBreaksRenderer, BasemapToggle, Editor, Portal, OAuthInfo, esriId,
       PortalQueryParams) {
 
+      var info = new OAuthInfo({
+        appId: "aBA2fHwkOHXJYtax",
+        popup: false
+      });
+
+      esriId.registerOAuthInfos([info]);
+
       document.getElementById("signIn").addEventListener("click", function() {
-        var info = new OAuthInfo({
-          appId: "aBA2fHwkOHXJYtax",
-          popup: false
-        });
-
-        esriId.registerOAuthInfos([info]);
-
         esriId
         .checkSignInStatus(info.portalUrl + "/sharing")
         .then(function() {
