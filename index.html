@@ -191,12 +191,12 @@
 
       esriId.registerOAuthInfos([info]);
 
-      // esriId
-      //   .checkSignInStatus(info.portalUrl + "/sharing")
-      //   .then(function() {
-      //     displayItems();
-      //   })
-      //   .catch(/*give user an option to sign in*/);
+      esriId
+        .checkSignInStatus(info.portalUrl + "/sharing")
+        .then(function() {
+          displayItems();
+        })
+        .catch(/*give user an option to sign in*/);
 
       const sketchLayer = new GraphicsLayer();
 
