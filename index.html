@@ -184,17 +184,17 @@
       promiseUtils, UniqueValueRenderer, ClassBreaksRenderer, BasemapToggle, Editor, Portal, OAuthInfo, esriId,
       PortalQueryParams) {
 
-      var info = new OAuthInfo({
-        appId: "aBA2fHwkOHXJYtax",
-        popup: false
-      });
+      // var info = new OAuthInfo({
+      //   appId: "aBA2fHwkOHXJYtax",
+      //   popup: false
+      // });
 
-      esriId.registerOAuthInfos([info]);
+      // esriId.registerOAuthInfos([info]);
 
-      document.getElementById("signIn").addEventListener("click", function() {
-        const creds = esriId.getCredential(info.portalUrl + "/sharing");
-        console.log(creds['Promise'])
-      });
+      // document.getElementById("signIn").addEventListener("click", function() {
+      //   const creds = esriId.getCredential(info.portalUrl + "/sharing");
+      //   console.log(creds['Promise'])
+      // });
 
       const sketchLayer = new GraphicsLayer();
 
