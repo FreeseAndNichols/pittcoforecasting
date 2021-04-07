@@ -81,6 +81,13 @@
       max-height: 100%;
     }
 
+    /* #tableDiv {
+      position: absolute;
+      top: 50px;
+      left: 75%;
+      max-width: 25%;
+    } */
+
     #queryDiv,
     #resultDiv {
       min-width: 250px;
@@ -154,6 +161,99 @@
       visibility: visible;
     }
 
+    #formDiv {
+      width: 100%;
+    }
+
+    .esri-item-list__scroller {
+      overflow-y: visible;
+    }
+
+    .editArea-container {
+      position: relative;
+      border: solid;
+      height: 100%;
+      top: 1.5%;
+      right: 10px;
+      width: 500px;
+      float: right;
+      display: flex;
+      background: #fff;
+      line-height: 1.5em;
+      overflow: auto;
+    }
+
+    .editArea-container div {
+    font-size: 25px;
+    font-weight: bold;
+    padding: .5em;
+    color: black;
+    text-align: center;
+    flex: 1;
+    }
+    
+  .innerContainer {
+    display: flex;
+    flex-direction: column;
+    border: solid;
+    width: 425px;
+    }
+  .allItemContainer {
+    background: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    
+  }
+  .inputName {
+    border-bottom: solid thin;
+  }
+
+  .transparent {
+    opacity: 0;
+    }
+ 
+
+    .slider {
+      -webkit-appearance: none;  /* Override defaultCSS styles */
+      appearance: none;
+      width: 100%; /* Full-width */
+      height: 25px; /* Specified height*/
+      background: #d3d3d3; /* Grey background */
+      outline: none; /* Remove outline */
+      opacity: 0.7; /* Settransparency (for mouse-over effects on hover) */
+      -webkit-transition: .2s; /* 0.2 seconds transition on hover */
+      transition: opacity .2s;
+  }
+  /* Mouse-overeffects */
+  .slider:hover {
+    opacity: 1; /* Fully shown on mouse-over */
+  }
+
+  .slider::-webkit-slider-thumb {
+  -webkit-appearance: none; /* Override default look */
+    appearance: none;
+  width: 25px; /* Set a specific slider handle width */
+    height: 25px; /* Slider handle height */
+    background: black; /* Greenbackground */
+  cursor: pointer; /* Cursor on hover */
+  }
+
+  .button {
+    background-color: #4CAF50; /* Green */
+    align-items: center;
+  
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+  } 
+
+
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
   <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js" ></script>
@@ -178,11 +278,15 @@
       "esri/portal/Portal",
       "esri/identity/OAuthInfo",
       "esri/identity/IdentityManager",
-      "esri/portal/PortalQueryParams"
+      "esri/portal/PortalQueryParams",
+      "esri/widgets/FeatureTable",
+      "esri/widgets/FeatureForm",
+      "esri/widgets/FeatureTemplates"
+
 
     ], function (esriConfig, WebMap, MapView, FeatureLayer, SketchViewModel, GraphicsLayer, Expand, Legend,
       promiseUtils, UniqueValueRenderer, ClassBreaksRenderer, BasemapToggle, Editor, Portal, OAuthInfo, esriId,
-      PortalQueryParams) {
+      PortalQueryParams, FeatureTable, FeatureForm, FeatureTemplates) {
 
       // var info = new OAuthInfo({
       //   appId: "aBA2fHwkOHXJYtax",
@@ -222,7 +326,7 @@
       document.getElementById('queryDiv').style.display = "block";
       view.ui.add(queryDiv, 'bottom-left');
       view.ui.add(resultDiv, "top-right");
-
+      /* document.getElementById('tableDiv').style.display = 'block'; */
       let sceneLayer = null;
       let sceneLayerView = null;
 
@@ -558,20 +662,15 @@
       };
 
       map.load().then(function () {
-        inputLayer = map.allLayers.find(function (layer) {
-          return layer.title === "sewer_and_water"
+        sceneLayer = map.allLayers.find(function (layer) {
+          if (layer.title === "sewer_and_water_DEV") {
+            map.add(layer)
+            return layer.title === "sewer_and_water_DEV"
+          }
         });
 
-        console.log(inputLayer.queryFeatures().then(function (results) {
-          console.log(results)
-        }));
-               
-        map.remove(inputLayer);
-        const copyLayer = JSON.parse(JSON.stringify(inputLayer));
-        sceneLayer = new FeatureLayer(copyLayer);
-        map.add(sceneLayer, -1);
-
-        
+        map.removeAll();
+        map.add(sceneLayer);
         sceneLayer.outFields = ["waterUser", "sewerUser", "sewerAndWater", "waterUsage", "zone"];
         sceneLayer.renderer = zoningRenderer
         view.whenLayerView(sceneLayer).then(function (layerView) {
@@ -610,7 +709,34 @@
           group: 'upper_left_expand'
         });
         view.ui.add([legendExpand, basemapExpand, radioExpand], "top-left")
+
+/* 
+        // const featureTable = new FeatureTable({
+        //     view: view,
+        //     layer: sceneLayer,
+        //     editingEnabled: true,
+        //     // Autocast the FieldColumnConfigs
+        //     fieldConfigs: [{
+        //       name: "zone",
+        //       label: "Zoning",
+        //       editable: true
+        //     }],
+        //     container: document.getElementById("tableDiv")
+        // }); */
+
+        const featureForm = new FeatureForm({
+          container: "formDiv",
+          layer: sceneLayer,
+          fieldConfig: [
+            {
+              name: "zone",
+              label: "Zoning"
+            }
+          ]
+        });
+        document.getElementById('editArea').style.display = 'none';
       });
+      
 
       var radios = document.getElementsByName("renderer");
 
@@ -669,6 +795,14 @@
         .getElementById("clearGeometry")
         .addEventListener("click", clearGeometry);
 
+      function editSessionBegin() {
+        document.getElementById('editArea').style.display = "block";
+        document.getElementById('resultDiv').style.display = "none";
+      }
+      document.getElementById("startForecast").addEventListener("click", editSessionBegin)
+
+
+
       // Clear the geometry and set the default renderer
       function clearGeometry() {
         sketchGeometry = null;
@@ -676,6 +810,7 @@
         sketchLayer.removeAll();
         clearHighlighting();
         document.getElementById('resultDiv').style.display = "none";
+        document.getElementById('editArea').style.display = "none";
       }
       var highlightHandle = null;
 
@@ -694,7 +829,8 @@
         document.getElementById('resultDiv').style.display = "block";
         return promiseUtils.eachAlways([
           queryStatistics(),
-          updateSceneLayer()
+          updateSceneLayer(),
+          test()
         ]);
       });
 
@@ -724,13 +860,24 @@
         highlightHandle = sceneLayerView.highlight(objectIds);
       }
 
+
       function updateSceneLayer() {
         const query = sceneLayerView.createQuery();
         query.geometry = sketchGeometry;
+        // console.log(sceneLayerView.queryObjectIds(query).then(function(objectIds){console.log(objectIds)}))
         return sceneLayerView
           .queryObjectIds(query)
           .then(highlightBuildings);
-      }
+      };
+
+      function test() {
+      const query = sceneLayerView.createQuery();
+      query.geometry = sketchGeometry;
+      sceneLayerView.queryObjectIds(query).then(function (result) {
+        console.log(result)
+        })
+      };
+    
 
       var waterChart = null;
       var sewerChart = null;
@@ -922,31 +1069,48 @@
       createSewerChart();
       createWaterUsageChart();
 
-      // Loop through webmap layers and set an EditConfig for each
-      // view.map.layers.forEach(function (layer) {
-      //   console.log(layer.title)
-      //   if (layer.title === "sewer_and_water") {
-      //     // Specify a few of the fields to edit within the form
-      //     editCustomerData = {
-      //       layer: layer,
-      //       fieldConfig: {
-      //         name: "zone",
-      //         label: "Zoning"
-      //       }
-            
-      //     };
-      //   }
-      // });
-      // Create the Editor
-      // let editor = new Editor({
-      //     view: view,
-      //     // Pass in the configurations created above
-      //     // layerInfos: editCustomerData,
-      //   });
-
-      // view.ui.add(editor, "top-right");
-
       
+      var rangeslider = document.getElementById("myRange1");
+      var output = document.getElementById("ouput1");
+      output.innerHTML = rangeslider.value;
+        
+      rangeslider.oninput = function() {
+        output.innerHTML = this.value;
+      }
+
+      var rangeslider2 = document.getElementById("myRange2");
+      var output2 = document.getElementById("ouput2");
+      output2.innerHTML = rangeslider2.value;
+        
+      rangeslider2.oninput = function() {
+        output2.innerHTML = this.value;
+      }
+
+      var rangeslider3 = document.getElementById("myRange3");
+      var output3 = document.getElementById("ouput3");
+      output3.innerHTML = rangeslider3.value;
+        
+      rangeslider3.oninput = function() {
+        output3.innerHTML = this.value;
+      }
+      document.getElementById('submit').addEventListener('click',getInputVals)
+
+
+      function getInputVals() {
+        var inputs = document.getElementsByClassName( 'inputName' ),
+            names  = [].map.call(inputs, function( input ) {
+                return input.textContent;
+            }).join( '|' );
+        console.log(names);
+        
+        var inputs = document.getElementsByClassName( 'slider' ),
+            names  = [].map.call(inputs, function( input ) {
+                return input.value;
+            }).join( '|' );
+        console.log(names);
+        setTimeout(() => {document.getElementById('editArea').style.display = "none"}, 250);
+      }
+            
     });
 
     
@@ -979,9 +1143,9 @@
     </button>
     <br />
     <div class = 'tooltip' id = 'startForecastDiv'>
-    <button class="esri-button" id="startForecast" type = "button" disabled>
+    <button class="esri-button" id="startForecast" type = "button", value = "begin">
       Make Projections
-      <span class="tooltiptext" id = "tooltiptextid" >Please sign in to use this feature.</span>
+      <!-- <span class="tooltiptext" id = "tooltiptextid" >Please sign in to use this feature.</span> -->
     </button>
     </div>
   </div>
@@ -1003,6 +1167,7 @@
       
     </div>
   </div>
+  /* <div id="tableDiv" class="esri-widget"></div> */
   <div id="paneDiv" class="esri-widget">
     <p>Please Select A Symbology Category:</p>
     <input type="radio" name="renderer" value="ZONING" checked /> Zoning<br />
@@ -1010,8 +1175,40 @@
     <input type="radio" name="renderer" value="SEWER" /> Sewer<br />
     <input type="radio" name="renderer" value="UTILITIES" /> Water and Sewer<br />
   </div>
-  <!-- <div id="editorDiv"></div> -->
   <div id="basemapGalleryDiv"></div>
-</body>
+
+
+  <div id = "editArea" class="editArea-container">
+    <div class="allItemContainer">
+      <div class = "innerContainer">
+        <div class="inputName">Flow Factor 2025</div>
+        <div class="slidecontainer">
+            <input type="range" min=0 max=10 value=5 class="slider" step=0.05 id="myRange1">
+            <p>Value: <span id="ouput1"></span></p>
+  
+        </div>
+      </div>
+      <div class="transparent"></div>
+      <div class = "innerContainer">
+        <div class="inputName">Flow Factor 2030</div>
+        <div class="slidecontainer">
+            <input type="range" min=0 max=10 value = 5 class="slider" step=0.05 id="myRange2">
+            <p>Value: <span id="ouput2"></span></p>
+        </div>
+      </div>
+      <div class="transparent"></div>
+      <div class = "innerContainer">
+        <div class="inputName">Flow Factor 2040</div>
+        <div class="slidecontainer">
+            <input type="range" min=0 max=10 value=5 class="slider" step=0.05 id="myRange3">
+            <p>Value: <span id="ouput3"></span></p>
+        </div>
+      </div>
+      <div class="transparent"></div>
+      <button id = "submit" class="button">Save Projections</button>
+    </div>
+    
+  </div>
+  </body>
 
 </html>
