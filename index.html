@@ -38,7 +38,7 @@
     <div class = "projection-options">
       <div class = 'tooltip' id = 'startForecastDiv'>
         <span class="tooltiptext" id = "tooltiptextid" >Please sign in to use these features.</span>
-        <button class = "button" id = "developmentForecast" type = "button", value="begin" style="font-size: 12px; margin:0px">
+        <button class = "button disabled" id = "developmentForecast" type = "button", value="begin" style="font-size: 12px; margin:0px">
           Development Projections
         </button>
         <button class="button" id="startForecast" type = "button", value = "begin" style="font-size: 12px; margin-top:12px; margin-left:0px; margin-right: 0px;">
@@ -75,7 +75,7 @@
   <div id="basemapGalleryDiv"></div>
 
   <div id = "editArea" class="editArea-container">
-    <table class = 'table'>
+    <table class = 'table', id = "ffTable">
       <col style="width:150px">
       <col style="width:10px">
       <col style="width:10px">
@@ -91,25 +91,25 @@
       <tbody>
         <tr>
           <th>Water Flow Factor</th>
-          <td><input id="wff2025" type="number" min = 0 class = "ffInput"></td>
-          <td><input id="wff2030" type="number" min = 0 class = "ffInput" ></td>
-          <td><input id="wff2040" type="number" min = 0 class = "ffInput" ></td>
+          <td><input id="waterFactor_2025" type="number" min = 0 class = "ffInput"></td>
+          <td><input id="waterFactor_2030" type="number" min = 0 class = "ffInput" ></td>
+          <td><input id="waterFactor_2040" type="number" min = 0 class = "ffInput" ></td>
         </tr>
         <tr>
           <th>Sewer Flow Factor</th>
-          <td><input id="sff2025" type = "number" min = 0 class = "ffInput"></td>
-          <td><input id="sff2030" type = "number" min = 0 class = "ffInput"></td>
-          <td><input id="sff2040" type = "number" min = 0 class = "ffInput"></td>
+          <td><input id="sewerFactor_2025" type = "number" min = 0 class = "ffInput"></td>
+          <td><input id="sewerFactor_2030" type = "number" min = 0 class = "ffInput"></td>
+          <td><input id="sewerFactor_2040" type = "number" min = 0 class = "ffInput"></td>
         </tr>
         </tbody>
     </table>
     <button id = "submitFf" class="button">Save Projections</button>
     <select id = "district" class = "dropdown">
-      <option value="">District</option>
+      <option value="" selected disabled hidden>District</option>
     </select> 
   </div>
   <div id = "devProjectionsArea" class="editArea-container">
-    <table class = 'table'>
+    <table class = 'table' id = 'luTable'>
       <col style="width:150px">
       <col style="width:10px">
       <col style="width:10px">
@@ -125,9 +125,9 @@
       <tbody>
         <tr>
           <th>Land Use</th>
-          <td><input id = "lu2025" type="number" min = 0 class = "luInput"></td>
-          <td><input id = "lu2030" type="number" min = 0 class = "luInput" ></td>
-          <td><input id = "lu2040" type="number" min = 0 class = "luInput" ></td>
+          <td><input id = "landUse_2025" type="number" min = 0 class = "luInput"></td>
+          <td><input id = "landUse_2030" type="number" min = 0 class = "luInput" ></td>
+          <td><input id = "landUse_2040" type="number" min = 0 class = "luInput" ></td>
         </tr>
         <tr>
           <th>% Developed</th>
