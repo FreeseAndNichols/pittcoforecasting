@@ -1,0 +1,256 @@
+body {
+  padding: 0;
+  margin: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+#viewDiv {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50px;
+  bottom: 0;
+}
+
+.header {
+  background-color: black;
+  opacity: 0.75;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 50px;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content:space-between;
+  flex-wrap: wrap;
+}
+
+.main-nav {
+  display: inline;
+  margin-right: 0;
+}
+
+.navItem {
+  height: 50px;
+  border-color: rgb(71, 71, 71);
+  background-color: rgb(39, 39, 39);
+  color: white;
+  font-size: 10px;
+  font-family: Arial;
+  font-weight: 120;
+  padding: 5px 5px;
+  margin-right: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  display: inline-block;
+}
+
+#content {
+  margin-left: 20px;
+  margin-top: 5px;
+}
+
+/* #viewDiv {
+  padding: 0;
+  margin: 0;
+  height: 100%;
+  width: 100%;
+} */
+
+#paneDiv {
+  min-width: 200px;
+  padding: 8px;
+  background-color: rgba(255, 255, 255, 1.0);
+  border: 1px solid white;
+  color: black;
+}
+
+.esri-ui-top-right {
+  max-height: 100%;
+}
+
+/* #tableDiv {
+  position: absolute;
+  top: 50px;
+  left: 75%;
+  max-width: 25%;
+} */
+
+#queryDiv,
+#resultDiv {
+  min-width: 250px;
+  font-size: 14px;
+  padding: 10px;
+  display: none;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.geometry-options {
+  display: flex;
+  flex-direction: row;
+}
+
+.projection-options {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+}
+
+.geometry-button {
+  flex: 1;
+  border-style: solid;
+  border-width: 1px;
+  border-image: none;
+}
+
+.geometry-button-selected {
+  background: #4c4c4c;
+  color: #fff;
+}
+
+.count {
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: bold;
+  display: inline-block;
+}
+
+.esri-editor .esri-item-list__scroller {
+  max-height: 350px;
+}
+
+.tooltip {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted black;
+  cursor: disabled;
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 335px;
+  font-size: 14px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px 0;
+  top: 25%;
+  left: 0%;
+
+  /* Position the tooltip */
+  position: absolute;
+  z-index: 1;
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+}
+
+#formDiv {
+  width: 100%;
+}
+
+.esri-item-list__scroller {
+  overflow-y: visible;
+}
+
+
+.inputName {
+  border-bottom: solid thin;
+}
+
+.transparent {
+opacity: 0;
+}
+
+
+.slider {
+  -webkit-appearance: none;  /* Override defaultCSS styles */
+  appearance: none;
+  width: 100%; /* Full-width */
+  height: 25px; /* Specified height*/
+  background: #d3d3d3; /* Grey background */
+  outline: none; /* Remove outline */
+  opacity: 0.7; /* Settransparency (for mouse-over effects on hover) */
+  -webkit-transition: .2s; /* 0.2 seconds transition on hover */
+  transition: opacity .2s;
+}
+/* Mouse-overeffects */
+.slider:hover {
+opacity: 1; /* Fully shown on mouse-over */
+}
+
+.slider::-webkit-slider-thumb {
+-webkit-appearance: none; /* Override default look */
+appearance: none;
+width: 25px; /* Set a specific slider handle width */
+height: 25px; /* Slider handle height */
+background: black; /* Greenbackground */
+cursor: pointer; /* Cursor on hover */
+}
+
+.editArea-container {
+  position: absolute;
+  border: solid;
+  border-width: .1px;
+  border-color: rgb(184, 184, 184);
+  top: 60px;
+  right: 10px;
+  float: right;
+  background:white;
+  line-height: 1.5em;
+  overflow: auto;
+}
+
+.editArea-container div {
+padding: .5em;
+color: black;
+text-align: center;
+}
+
+.button {
+background-color: #0079c1;
+font-family: "Avenir Next","Helvetica Neue",Helvetica,Arial,sans-s;
+align-items: center;
+border: none;
+border-radius: 2px;
+color: white;
+margin: 10px 10px;
+margin-left:20px;
+padding: 6px 20px;
+text-align: center;
+text-decoration: none;
+display: inline-block;
+font-size: 16px;
+} 
+
+.table {
+font-family: "Avenir Next","Helvetica Neue","Helvetica","Arial","sans-s";
+color: rgb(59, 59, 59);
+}
+
+.ffInput {
+width: 50px;
+}
+.luInput {
+width: 50px;
+}
+
+.dropdown {
+position: relative;
+float: left;
+margin-left:10px;
+margin-top: 10px;
+width: 125px;
+font-family: "Avenir Next","Helvetica Neue","Helvetica","Arial","sans-s";
+font-weight: bold;
+
+
+}
