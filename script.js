@@ -118,7 +118,7 @@ require([
         expandIconClass: 'esri-icon-layers',
         group: 'upper_left_expand'
         });
-        view.ui.add([legendExpand, basemapExpand, radioExpand], "top-left")
+        view.ui.add([basemapExpand, radioExpand, legendExpand], "top-left")
         $('#editArea').css('display','none');
         $('#devProjectionsArea').css('display','none');
     
@@ -144,7 +144,6 @@ require([
         };
     }
     
-    
     $("#district").bind('change', function(){
         const selectedDistrict = $("#district option:selected").val();
         console.log(selectedDistrict);
@@ -152,13 +151,54 @@ require([
         districtQuery.where = `Districts = '${selectedDistrict}'`;
         
         sceneLayerView.queryFeatures(districtQuery).then(function(results){
-            console.log(results);
             sceneLayerView.effect = {
                 filter: districtQuery,
                 excludedEffect: "opacity(40%) blur(1.5px) brightness(0.8)",
-                includedEffect: "brightness(1.2)"}
+                includedEffect: "brightness(1.2)"};
+            $('#submitFf').bind('click', function(){sceneLayerView.effect="none"}).bind('click',function() {
+                var inputs = $('.ffInput'),
+                    k  = [].map.call(inputs, function( input ) {
+                        return input.id
+                    });
+                    v = [].map.call(inputs, function(input){
+                        return input.value
+                    });
+            
+                    const flowFactorInput = {}
+                    k.forEach((fieldname, index) => {
+                        flowFactorInput[fieldname] = v[index]
+                    })
+            
+                console.log(flowFactorInput);
+                var updateFeatures = results.features.map(function(feature,i){
+                    feature.attributes["waterFactor_2025"] = flowFactorInput["waterFactor_2025"];
+                    feature.attributes["waterFactor_2030"] = flowFactorInput["waterFactor_2030"];
+                    feature.attributes["waterFactor_2040"] = flowFactorInput["waterFactor_2040"];
+                    feature.attributes["sewerFactor_2025"] = flowFactorInput["sewerFactor_2025"];
+                    feature.attributes["sewerFactor_2030"] = flowFactorInput["sewerFactor_2030"];
+                    feature.attributes["sewerFactor_2040"] = flowFactorInput["sewerFactor_2040"];
+    
+                    return feature
+                });
+                    console.log(updateFeatures);
+                
+                    sceneLayer.applyEdits({
+                        updateFeatures: updateFeatures
+                    }).then(function(results){
+                        console.log("update results",results)
+                    }).catch(function(err){
+                        console.log(err)
+                    });
+    
+    
+    
+                setTimeout(() => {$('#editArea').css('display','none')}, 150);            
+            })
             }
+    
         )});
+    
+    $('#submitFF').bind('click',function(){$('.ffInput').val('');})
     
     
     const radios = $('[name = "renderer"]');
@@ -208,7 +248,6 @@ require([
         const geometryType = event.target.value;
         clearGeometry();
         sketchViewModel.create(geometryType);
-    
     }
     
     $("#clearGeometry").bind("click",clearGeometry);
@@ -217,9 +256,9 @@ require([
         map.removeAll()
         sceneLayer = new FeatureLayer({
         url: "https://services.arcgis.com/t6fsA0jUdL7JkKG2/arcgis/rest/services/sewer_water_landUse_DEV/FeatureServer",
-        outFields: ["waterDemand_2025","waterFactor_2025","sewerLoad_2025","sewerFactor_2025", "landUse_2025",
-                    "waterDemand_2030","waterFactor_2030","sewerLoad_2030","sewerFactor_2030", "landUse_2030",
-                    "waterDemand_2040","waterFactor_2040","sewerLoad_2040","sewerFactor_2030", "landUse_2040",
+        outFields: ["waterDemand_2025","waterFactor_2025","sewerLoad_2025","sewerFactor_2025", "landUse_2025","pDeveloped_2025",
+                    "waterDemand_2030","waterFactor_2030","sewerLoad_2030","sewerFactor_2030", "landUse_2030","pDeveloped_2030",
+                    "waterDemand_2040","waterFactor_2040","sewerLoad_2040","sewerFactor_2030", "landUse_2040","pDeveloped_2040",
                     "zone","sewerUser","waterUser","sewerAndWater", "waterUsage","Districts"],
         id: "devLayer"
         });
@@ -227,11 +266,24 @@ require([
         sceneLayer.renderer = zoningRenderer
         $('#zoningRadio').prop('checked',true)
         view.whenLayerView(sceneLayer).then((layerView) => sceneLayerView = layerView);
-        console.log(sceneLayer.outFields)
         $('#startForecast').prop('disabled',false);
         $('#tooltiptextid').prop('hidden',true);
         $('#signIn').prop('disabled',true).html('Signed In').css('cursor','default');
         $('startForecastDiv').removeClass('tooltip');
+        view.ui.remove(legendExpand)
+        const legend = new Legend({
+            view: view,
+            layerInfos: [{
+                layer: sceneLayer,
+                title: 'Pittsylvania County Utilities Dashboard Legend'
+            }]
+            });
+        legendExpand = new Expand({
+            view: view,
+            content: legend,
+            group: "upper_left_expand"
+            }); 
+        view.ui.add(legendExpand, 'top-left')
     
     }
     
@@ -337,12 +389,8 @@ require([
     sceneLayerView.queryFeatures(query).then(function (results) {
         console.log(results)
         results.features.length > 0 ? $('#developmentForecast').removeClass('disabled') : $('#developmentForecast').addClass('disabled');
-        const selectedFeatureForUpdate = results.features;
         })
     };
-    // $('#SubmitFf #SubmitLu').bind('click', function(){
-    //     var updateFeatures = 
-    // })
     
     var waterChart = null;
     var sewerChart = null;
@@ -534,27 +582,7 @@ require([
     createSewerChart();
     createWaterUsageChart();
     
-    $('#submitFf').bind('click', getFfInputVals).bind('click', function(){sceneLayerView.effect="none"});
-    $('#submitLu').bind('click', getLuInputVals).bind('click', function(){sceneLayerView.effect="none"});
-    
-    function getFfInputVals() {
-        var inputs = $('.ffInput'),
-            k  = [].map.call(inputs, function( input ) {
-                return input.id
-            });
-            v = [].map.call(inputs, function(input){
-                return input.value
-            });
-    
-            const flowFactorInput = {}
-            k.forEach((fieldname, index) => {
-                flowFactorInput[fieldname] = v[index]
-            })
-    
-        console.log(flowFactorInput);
-        setTimeout(() => {$('#editArea').css('display','none')}, 150);
-        $('.ffInput').val('')
-    }
+    $('#submitLu').bind('click', getLuInputVals).bind('click', function(){sceneLayerView.effect="none"})
     
     function getLuInputVals() {
         var inputs = $('.luInput'),
