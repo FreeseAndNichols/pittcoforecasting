@@ -143,7 +143,8 @@ require([
             console.log(results);
             sceneLayerView.effect = {
                 filter: districtQuery,
-                excludedEffect: "blur(1.5px) grayscale(30%)"}
+                excludedEffect: "opacity(15%) blur(1.5px) brightness(0.8)",
+                includedEffect: "brightness(1.2) drop-shadow(5,5,5px black)"}
             }
         )});
     
