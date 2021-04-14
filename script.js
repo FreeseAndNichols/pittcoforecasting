@@ -130,8 +130,20 @@ require([
         var el = document.createElement("option");
         el.textContent = optn;
         el.value = optn;
-        district.appendChild(el);
+        dropdownContainer.appendChild(el);
     };
+    
+    zoneDropdownContainer = document.getElementsByClassName('zoneTypeContainer');
+    for (var i=0; i <zoneDropdownContainer.length; i++) {
+        for (var j=0;j <landUses.length; j++) {
+            var optn = landUses[j];
+            var el = document.createElement("option");
+            el.textContent = optn;
+            el.value = optn;
+            zoneDropdownContainer[i].appendChild(el);
+        };
+    }
+    
     
     $("#district").bind('change', function(){
         const selectedDistrict = $("#district option:selected").val();
@@ -143,8 +155,8 @@ require([
             console.log(results);
             sceneLayerView.effect = {
                 filter: districtQuery,
-                excludedEffect: "opacity(15%) blur(1.5px) brightness(0.8)",
-                includedEffect: "brightness(1.2) drop-shadow(5,5,5px black)"}
+                excludedEffect: "opacity(40%) blur(1.5px) brightness(0.8)",
+                includedEffect: "brightness(1.2)"}
             }
         )});
     
@@ -550,7 +562,7 @@ require([
                 return input.id
             });
             v = [].map.call(inputs, function(input){
-                return input.value
+                return input.value.split(':')[0]
             });
     
             const landUseInput = {}

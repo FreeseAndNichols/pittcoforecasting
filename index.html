@@ -105,15 +105,15 @@
     </table>
     <button id = "submitFf" class="button">Save Projections</button>
     <select id = "district" class = "dropdown">
-      <option value="" selected disabled hidden>District</option>
+      <option value="" selected disabled>District</option>
     </select> 
   </div>
   <div id = "devProjectionsArea" class="editArea-container">
     <table class = 'table' id = 'luTable'>
       <col style="width:150px">
-      <col style="width:10px">
-      <col style="width:10px">
-      <col style="width:10px">
+      <col style="width:20px">
+      <col style="width:20px">
+      <col style="width:20px">
       <thead>
         <tr>
           <th></th>
@@ -125,9 +125,9 @@
       <tbody>
         <tr>
           <th>Land Use</th>
-          <td><input id = "landUse_2025" type="number" min = 0 class = "luInput"></td>
-          <td><input id = "landUse_2030" type="number" min = 0 class = "luInput" ></td>
-          <td><input id = "landUse_2040" type="number" min = 0 class = "luInput" ></td>
+          <td><select id = "landUse_2025"  class = "luInput zoneTypeContainer"></select></td>
+          <td><select id = "landUse_2030"  class = "luInput zoneTypeContainer" ></select></td>
+          <td><select id = "landUse_2040"  class = "luInput zoneTypeContainer" ></select></td>
         </tr>
         <tr>
           <th>% Developed</th>

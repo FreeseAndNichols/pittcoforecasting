@@ -73,13 +73,6 @@ body {
   max-height: 100%;
 }
 
-/* #tableDiv {
-  position: absolute;
-  top: 50px;
-  left: 75%;
-  max-width: 25%;
-} */
-
 #queryDiv,
 #resultDiv {
   min-width: 250px;
@@ -99,7 +92,6 @@ body {
   display: flex;
   flex-direction: row;
   align-items: center;
-
 }
 
 .geometry-button {
@@ -240,7 +232,7 @@ color: rgb(59, 59, 59);
 width: 50px;
 }
 .luInput {
-width: 50px;
+width: 55px;
 }
 
 .dropdown {
