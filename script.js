@@ -81,7 +81,7 @@ require([
     
         map.removeAll();
         map.add(sceneLayer);
-        sceneLayer.outFields = ["waterUser", "sewerUser", "sewerAndWater", "waterUsage", "zone"];
+        sceneLayer.outFields = ["*"];
         sceneLayer.renderer = zoningRenderer
         view.whenLayerView(sceneLayer).then(function (layerView) {
         sceneLayerView = layerView;
@@ -158,15 +158,9 @@ require([
     $('#submitFf').bind('click',function(){
         const selectedDistrict = $("#district option:selected").val();
         const districtQuery = sceneLayer.createQuery();
-        districtQuery.where = `Districts = '${selectedDistrict}'`;
-        // districtQuery = {
-        //     where: `Districts = '${selectedDistrict}'`,
-        //     outFields: ['*'],
-        //     returnGeometry: false
-        // }
-    
-        sceneLayerView.queryFeatures(districtQuery).then(function(results){
-            
+        districtQuery.where = `Districts = '${selectedDistrict}' AND zone = 'DZ'`;
+        districtQuery.outFields = '*';
+        sceneLayerView.queryFeatures(districtQuery).then(function(results){            
             var inputs = $('.ffInput'),
                 k  = [].map.call(inputs, function( input ) {
                     return input.id
@@ -262,8 +256,7 @@ require([
         map.removeAll()
         sceneLayer = new FeatureLayer({
         url: "https://services.arcgis.com/t6fsA0jUdL7JkKG2/arcgis/rest/services/sewer_water_landUse_development/FeatureServer/0",
-        outFields: ['*'],
-        id: "devLayer"});
+        outFields: '*'});
         map.add(sceneLayer);
         sceneLayer.renderer = zoningRenderer
         $('#zoningRadio').prop('checked',true)
