@@ -15,7 +15,6 @@ require([
     
     ], function (esriConfig, WebMap, MapView, FeatureLayer, SketchViewModel, GraphicsLayer, Expand, Legend,
     promiseUtils, UniqueValueRenderer, ClassBreaksRenderer, BasemapToggle, Portal) {
-    
     const landUses = ['A-1: Agricultural', 'RE: Residential Estates', 'R-1: Suburban Sudivision', 'RMF: Multi-Family', 'RPD: Planned Unit Development',
                       'MHP: Manufactured Housing Park', 'RC-1: Combined Subdivision', 'B-1: Business (Limited)', 'B-2: Business (General)', 'M-1: Light Industry', 'M-2: Heavy Industry',
                       'C-1: Conservation', 'DZ: Double Zoned', 'TZ: Town', 'UK: Unknown'];
@@ -158,7 +157,7 @@ require([
     $('#submitFf').bind('click',function(){
         const selectedDistrict = $("#district option:selected").val();
         const districtQuery = sceneLayer.createQuery();
-        districtQuery.where = `Districts = '${selectedDistrict}' AND zone = 'DZ'`;
+        districtQuery.where = `Districts = '${selectedDistrict}' AND zone = 'R-1'`;
         districtQuery.outFields = '*';
         sceneLayerView.queryFeatures(districtQuery).then(function(results){            
             var inputs = $('.ffInput'),
@@ -176,6 +175,7 @@ require([
         
             console.log(flowFactorInput);
             var updateFeatures = results.features.map(function(feature,i){
+                esriConfig.request.timeout = 300000;
                 feature.attributes["waterFactor_2025"] = flowFactorInput["waterFactor_2025"];
                 feature.attributes["waterFactor_2030"] = flowFactorInput["waterFactor_2030"];
                 feature.attributes["waterFactor_2040"] = flowFactorInput["waterFactor_2040"];
@@ -190,7 +190,8 @@ require([
                 sceneLayer.applyEdits({
                     updateFeatures: updateFeatures
                 }).then(function(results){
-                    console.log("update results",results)
+                    console.log("update results",results);
+                    
                 }).catch(function(err){
                     console.log(err)
                 });
@@ -256,11 +257,17 @@ require([
         map.removeAll()
         sceneLayer = new FeatureLayer({
         url: "https://services.arcgis.com/t6fsA0jUdL7JkKG2/arcgis/rest/services/sewer_water_landUse_development/FeatureServer/0",
-        outFields: '*'});
+        outFields: '*', popupTemplate: {
+            "title": "Title",
+            "content":"<b>Zoning 2020: </b>{zone}<br><b>Water Flow Factor 2025: </b>{waterFactor_2025}<br><b>Water Flow Factor 2030: </b>{waterFactor_2030}<br><b>Water Flow Factor 2040: </b>{waterFactor_2040}<br><b>Sewer Flow Factor 2025: </b>{sewerFactor_2025}<br><b>Sewer Flow Factor 2030: </b>{sewerFactor_2030}<br><b>Sewer Flow Factor 2040: </b>{sewerFactor_2040}<br><b>Zoning 2025: </b>{landUse_2025}<br><b>Zoning 2030: </b>{landUse_2030}<br><b>Zoning 2040: </b>{landUse_2040}<br><b>% Developed 2025: </b>{pDeveloped_2025}<br><b>% Developed 2030: </b>{pDeveloped_2030}<br><b>% Developed 2040: </b>{pDeveloped_2040}"
+        }});
         map.add(sceneLayer);
         sceneLayer.renderer = zoningRenderer
         $('#zoningRadio').prop('checked',true)
-        view.whenLayerView(sceneLayer).then((layerView) => sceneLayerView = layerView);
+        view.whenLayerView(sceneLayer).then((layerView) => {sceneLayerView = layerView;});
+        
+        
+
         $('#startForecast').prop('disabled',false);
         $('#tooltiptextid').prop('hidden',true);
         $('#signIn').prop('disabled',true).html('Signed In').css('cursor','default');
