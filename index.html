@@ -6,9 +6,11 @@
   <title>Pittsylvania County Utilities Dashboard</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
   <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js" ></script>
-  <link rel="stylesheet" href="https://js.arcgis.com/4.18/esri/themes/light/main.css">
+  <!-- <link rel="stylesheet" href="https://js.arcgis.com/4.18/esri/themes/light/main.css"> -->
+  <link rel="stylesheet" href="https://js.arcgis.com/next/esri/themes/light/main.css">
   <link href = "style.css" rel = "stylesheet" text = "text/css" />
-  <script src="https://js.arcgis.com/4.18/"></script>
+  <!-- <script src="https://js.arcgis.com/4.18/"></script> -->
+  <script src="https://js.arcgis.com/next/"></script>
   <script type = "text/javascript" src="script.js"> </script>
   <script type = "text/javascript" src="renderers.js"></script>
 </head>
@@ -131,9 +133,9 @@
         </tr>
         <tr>
           <th>% Developed</th>
-          <td><input id = "dev2025" type = "number" min = 0 class = "luInput"></td>
-          <td><input id = "dev2030" type = "number" min = 0 class = "luInput"></td>
-          <td><input id = "dev2040" type = "number" min = 0 class = "luInput"></td>
+          <td><input id = "pDeveloped_2025" type = "number" min = 0 class = "luInput"></td>
+          <td><input id = "pDeveloped_2030" type = "number" min = 0 class = "luInput"></td>
+          <td><input id = "pDeveloped_2040" type = "number" min = 0 class = "luInput"></td>
         </tr>
         </tbody>
     </table>
@@ -141,3 +143,4 @@
   </div>
   </body>
 </html> 
+

@@ -11,10 +11,9 @@ require([
     "esri/renderers/UniqueValueRenderer",
     "esri/renderers/ClassBreaksRenderer",
     "esri/widgets/BasemapToggle",
-    "esri/portal/Portal",
     
     ], function (esriConfig, WebMap, MapView, FeatureLayer, SketchViewModel, GraphicsLayer, Expand, Legend,
-    promiseUtils, UniqueValueRenderer, ClassBreaksRenderer, BasemapToggle, Portal) {
+    promiseUtils, UniqueValueRenderer, ClassBreaksRenderer, BasemapToggle) {
     const landUses = ['A-1: Agricultural', 'RE: Residential Estates', 'R-1: Suburban Sudivision', 'RMF: Multi-Family', 'RPD: Planned Unit Development',
                       'MHP: Manufactured Housing Park', 'RC-1: Combined Subdivision', 'B-1: Business (Limited)', 'B-2: Business (General)', 'M-1: Light Industry', 'M-2: Heavy Industry',
                       'C-1: Conservation', 'DZ: Double Zoned', 'TZ: Town', 'UK: Unknown'];
@@ -46,7 +45,7 @@ require([
         WATER: waterRenderer,
         SEWER: sewerRenderer,
         UTILITIES: utilitiesRender
-    }
+    };
     
     //Generates renderers based on the input field name.
     
@@ -141,7 +140,7 @@ require([
             el.value = optn;
             zoneDropdownContainer[i].appendChild(el);
         };
-    }
+    };
     
     $("#district").bind('change', function(){
         const selectedDistrict = $("#district option:selected").val();
@@ -157,7 +156,7 @@ require([
     $('#submitFf').bind('click',function(){
         const selectedDistrict = $("#district option:selected").val();
         const districtQuery = sceneLayer.createQuery();
-        districtQuery.where = `Districts = '${selectedDistrict}' AND zone = 'R-1'`;
+        districtQuery.where = `Districts = '${selectedDistrict}'`;
         districtQuery.outFields = '*';
         sceneLayerView.queryFeatures(districtQuery).then(function(results){            
             var inputs = $('.ffInput'),
@@ -174,8 +173,13 @@ require([
                 })
         
             console.log(flowFactorInput);
-            var updateFeatures = results.features.map(function(feature,i){
+            
+            var i,j,temparray,chunk = 1000;
+            for (i=0,j=results.features.length; i<j; i+=chunk) {
+            temparray = results.features.slice(i,i+chunk);
+            var updateFeatures = temparray.map(function(feature,i){
                 esriConfig.request.timeout = 300000;
+                feature.geometry = null;
                 feature.attributes["waterFactor_2025"] = flowFactorInput["waterFactor_2025"];
                 feature.attributes["waterFactor_2030"] = flowFactorInput["waterFactor_2030"];
                 feature.attributes["waterFactor_2040"] = flowFactorInput["waterFactor_2040"];
@@ -186,7 +190,7 @@ require([
                 return feature
             });
                 console.log(updateFeatures);
-            
+
                 sceneLayer.applyEdits({
                     updateFeatures: updateFeatures
                 }).then(function(results){
@@ -195,12 +199,60 @@ require([
                 }).catch(function(err){
                     console.log(err)
                 });
-    
-    
-    
-            setTimeout(() => {$('#editArea').css('display','none')}, 150);            
+            setTimeout(() => {$('#editArea').css('display','none')}, 150);   
+            }
+         
         })
         });
+    
+    $('#submitLu').bind('click', function(){sceneLayerView.effect="none"}).bind('click', function(){
+        const query = sceneLayerView.createQuery();
+        query.geometry = sketchGeometry;
+        sceneLayerView.queryFeatures(query).then(function (results) {
+            var inputs = $('.luInput'),
+            k  = [].map.call(inputs, function( input ) {
+                return input.id
+            });
+            v = [].map.call(inputs, function(input){
+                return input.value.split(':')[0]
+            });
+    
+            const landUseInput = {}
+            k.forEach((fieldname, index) => {
+                landUseInput[fieldname] = v[index]
+            })
+    
+        console.log(landUseInput);
+
+        var i,j,temparray,chunk = 1000;
+            for (i=0,j=results.features.length; i<j; i+=chunk) {
+            temparray = results.features.slice(i,i+chunk);
+            var updateFeatures = temparray.map(function(feature,i){
+                esriConfig.request.timeout = 300000;
+                feature.geometry = null;
+                feature.attributes["landUse_2025"] = landUseInput["landUse_2025"];
+                feature.attributes["landUse_2030"] = landUseInput["landUse_2030"];
+                feature.attributes["landUse_2040"] = landUseInput["landUse_2040"];
+                feature.attributes["pDeveloped_2025"] = landUseInput["pDeveloped_2025"];
+                feature.attributes["pDeveloped_2030"] = landUseInput["pDeveloped_2030"];
+                feature.attributes["pDeveloped_2040"] = landUseInput["pDeveloped_2040"];
+                
+                return feature
+            });
+                console.log(updateFeatures);
+
+                sceneLayer.applyEdits({
+                    updateFeatures: updateFeatures
+                }).then(function(results){
+                    console.log("update results",results);
+                    
+                }).catch(function(err){
+                    console.log(err)
+                });
+                setTimeout(() => {$('#devProjectionsArea').css('display', 'none')}, 150);
+            }
+        })
+    });
     
     const radios = $('[name = "renderer"]');
     for (var i = 0; i < radios.length; i++) {
@@ -249,15 +301,18 @@ require([
         const geometryType = event.target.value;
         clearGeometry();
         sketchViewModel.create(geometryType);
-    }
+    };
     
     $("#clearGeometry").bind("click",clearGeometry);
     
     function layerSwap() {
         map.removeAll()
         sceneLayer = new FeatureLayer({
-        url: "https://services.arcgis.com/t6fsA0jUdL7JkKG2/arcgis/rest/services/sewer_water_landUse_development/FeatureServer/0",
-        outFields: '*', popupTemplate: {
+        url: "https://services.arcgis.com/t6fsA0jUdL7JkKG2/arcgis/rest/services/sewer_water_landUse_develop/FeatureServer/0",
+        outFields: ['waterUsage','waterUser','sewerUser','sewerAndWater','waterFactor_2025','waterFactor_2030','waterFactor_2040',
+                    'sewerFactor_2025','sewerFactor_2030','sewerFactor_2040','zone',
+                    'landUse_2025','landUse_2030','landUse_2040',
+                    'pDeveloped_2025','pDeveloped_2030','pDeveloped_2040'], popupTemplate: {
             "title": "Title",
             "content":"<b>Zoning 2020: </b>{zone}<br><b>Water Flow Factor 2025: </b>{waterFactor_2025}<br><b>Water Flow Factor 2030: </b>{waterFactor_2030}<br><b>Water Flow Factor 2040: </b>{waterFactor_2040}<br><b>Sewer Flow Factor 2025: </b>{sewerFactor_2025}<br><b>Sewer Flow Factor 2030: </b>{sewerFactor_2030}<br><b>Sewer Flow Factor 2040: </b>{sewerFactor_2040}<br><b>Zoning 2025: </b>{landUse_2025}<br><b>Zoning 2030: </b>{landUse_2030}<br><b>Zoning 2040: </b>{landUse_2040}<br><b>% Developed 2025: </b>{pDeveloped_2025}<br><b>% Developed 2030: </b>{pDeveloped_2030}<br><b>% Developed 2040: </b>{pDeveloped_2040}"
         }});
@@ -266,8 +321,6 @@ require([
         $('#zoningRadio').prop('checked',true)
         view.whenLayerView(sceneLayer).then((layerView) => {sceneLayerView = layerView;});
         
-        
-
         $('#startForecast').prop('disabled',false);
         $('#tooltiptextid').prop('hidden',true);
         $('#signIn').prop('disabled',true).html('Signed In').css('cursor','default');
@@ -279,15 +332,15 @@ require([
                 layer: sceneLayer,
                 title: 'Pittsylvania County Utilities Dashboard Legend'
             }]
-            });
+        });
+
         legendExpand = new Expand({
             view: view,
             content: legend,
             group: "upper_left_expand"
             }); 
         view.ui.add(legendExpand, 'top-left')
-    
-    }
+    };
     
     function flowFactorSessionBegin() {
         clearGeometry();
@@ -296,9 +349,9 @@ require([
         $('#resultDiv').css('display','none');
         $('#devProjectionsArea').css('display','none');
         $('#devProjectionsArea').css('display','none');
-    }
+    };
     
-    $('#startForecast').bind('click', flowFactorSessionBegin);
+    $('#startForecast').bind('click', flowFactorSessionBegin).bind('click',function(){$('.ffInput').val('')});
     $('#signIn').bind('click', layerSwap).bind('click',clearGeometry);
     
     function zoningLandUseSessionBegin() {
@@ -311,10 +364,10 @@ require([
         else {
             $('#devProjectionsArea').css('display','block');
         };
-    }
-    $('#developmentForecast').bind('click', zoningLandUseSessionBegin).bind('click',function(){$('.ffInput').val('');})
-    ;
-    
+    };
+
+    $('#developmentForecast').bind('click', zoningLandUseSessionBegin).bind('click',function(){$('.luInput').val('')});
+
     // Clear the geometry and set the default renderer
     function clearGeometry() {
         sketchGeometry = null;
@@ -329,7 +382,8 @@ require([
         $('#developmentForecast').addClass('disabled');
         sceneLayerView.effect = "none";
         $('#district').prop('selectedIndex',0);
-    }
+    };
+
     var highlightHandle = null;
     
     function clearHighlighting() {
@@ -349,7 +403,7 @@ require([
         queryStatistics(),
         updateSceneLayer(),
         test()
-        ]);
+        ]);build
     });
     
     function runQuery() {
@@ -359,7 +413,7 @@ require([
         }
         console.error(error);
         })
-    }
+    };
     var highlightHandle = null;
     
     function clearHighlighting() {
@@ -367,14 +421,14 @@ require([
         highlightHandle.remove();
         highlightHandle = null;
         }
-    }
+    };
     
     function highlightBuildings(objectIds) {
         // Remove any previous highlighting
         clearHighlighting();
         $('#count').html(objectIds.length);
         highlightHandle = sceneLayerView.highlight(objectIds);
-    }
+    };
     
     function updateSceneLayer() {
         const query = sceneLayerView.createQuery();
@@ -444,12 +498,13 @@ require([
             allStats.totalWaterUsage
         ]);
         }, console.error);
-    }
+    };
+
     // Updates the given chart with new data
     function updateChart(chart, dataValues) {
         chart.data.datasets[0].data = dataValues;
         chart.update();
-    }
+    };
     
     function createWaterUserChart() {
     
@@ -491,7 +546,7 @@ require([
             }
         }
         });
-    }
+    };
     
     function createWaterUsageChart() {
     
@@ -543,7 +598,7 @@ require([
         }
         }]
     }
-    }});}
+    }});};
     
     function createSewerChart() {
         const sewerCanvas = document.getElementById('sewer-chart');
@@ -572,39 +627,18 @@ require([
             }
         }
         });
-    }
+    };
     
     function clearCharts() {
         updateChart(waterChart, [0, 0]);
         updateChart(sewerChart, [0, 0]);
         updateChart(waterUsageChart, [0])
         $('#count').html = 0
-    }
+    };
     
     createWaterUserChart();
     createSewerChart();
     createWaterUsageChart();
-    
-    $('#submitLu').bind('click', getLuInputVals).bind('click', function(){sceneLayerView.effect="none"})
-    
-    function getLuInputVals() {
-        var inputs = $('.luInput'),
-            k  = [].map.call(inputs, function( input ) {
-                return input.id
-            });
-            v = [].map.call(inputs, function(input){
-                return input.value.split(':')[0]
-            });
-    
-            const landUseInput = {}
-            k.forEach((fieldname, index) => {
-                landUseInput[fieldname] = v[index]
-            })
-    
-        console.log(landUseInput);
-        setTimeout(() => {$('#devProjectionsArea').css('display', 'none')}, 150);
-        $('.luInput').val('');
-    }
     
     $('#developmentForecast').on('click', function(e) {
         if ( $(this).hasClass('disabled') ){
