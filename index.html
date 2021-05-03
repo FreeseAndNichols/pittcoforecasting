@@ -4,27 +4,37 @@
   <meta charset="utf-8">
   <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>Pittsylvania County Utilities Dashboard</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
+  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script> -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@0.7.0"></script>
   <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js" ></script>
-  <!-- <link rel="stylesheet" href="https://js.arcgis.com/4.18/esri/themes/light/main.css"> -->
-  <link rel="stylesheet" href="https://js.arcgis.com/next/esri/themes/light/main.css">
+  <link rel="stylesheet" href="https://js.arcgis.com/4.19/esri/themes/light/main.css">
+  <!-- <link rel="stylesheet" href="https://js.arcgis.com/next/esri/themes/light/main.css"> -->
   <link href = "style.css" rel = "stylesheet" text = "text/css" />
-  <!-- <script src="https://js.arcgis.com/4.18/"></script> -->
-  <script src="https://js.arcgis.com/next/"></script>
+  <script src="https://js.arcgis.com/4.19/"></script>
+  <!-- <script src="https://js.arcgis.com/next/"></script> -->
   <script type = "text/javascript" src="script.js"> </script>
   <script type = "text/javascript" src="renderers.js"></script>
+  <script src="https://kit.fontawesome.com/b0b7b3c187.js" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.3/css/all.css" integrity="sha384-SZXxX4whJ79/gErwcOYf+zWLeJdY/qpuqC4cAa9rOGUstPomtqpuNWT9wdPEn2fk" crossorigin="anonymous">
 </head>
 
 <body>
   <header class="header">
     <div id="content" style="font-size: 32px; font-family: Arial; font-weight: 150;">Pittsylvania County Utilities Sandbox</div>
-    <nav class="main-nav">
-      <button class = "navItem" id = "signIn"><b>Sign-in To Make Projections</b></button>
-    </nav>
   </header>
   <div id="viewDiv"></div>
   <div id="queryDiv" class="esri-widget">
-    <b>Query by geometry</b><br />
+    <div id = "topRow" class = "topRowContainer">
+      <b>Query by geometry</b> 
+      <label class="switch">
+      <input type="checkbox" id="togBtn">
+      <div class="slider round">
+        <span class="on">RESULTS</span>
+        <span class="off">PROJECT</span>
+      </div>
+      </label>
+    </div>
     <br />Draw a geometry to query by:
     <div class="geometry-options">
       <button class="esri-widget--button esri-icon-map-pin geometry-button" id="point-geometry-button" value="point"
@@ -37,34 +47,90 @@
       Clear Selection
     </button>
     <br />
-    <div class = "projection-options">
-      <div class = 'tooltip' id = 'startForecastDiv'>
-        <span class="tooltiptext" id = "tooltiptextid" >Please sign in to use these features.</span>
-        <button class = "button disabled" id = "developmentForecast" type = "button", value="begin" style="font-size: 12px; margin:0px">
-          Development Projections
-        </button>
-        <button class="button" id="startForecast" type = "button", value = "begin" style="font-size: 12px; margin-top:12px; margin-left:0px; margin-right: 0px;">
-          Change Flow Factors
-        </button>
-        </div>
+    <div id = 'startForecastDiv' class = "projection-options">
+      <button class = "esri-button" id = "developmentForecast" type = "button", value="begin" style="font-size: 12px; border-color: black;">
+        Development Projections
+      </button>
+      <button class = "esri-button" id = "basinResults" type = "button", value="begin" style="font-size: 12px; display:none; border-color: black; background-color:#c6eb8c; color: black; font-weight: bolder;">
+        Lift Station Basin Results
+      </button>
+      <button class="esri-button" id="startForecast" type = "button", value = "begin" style="font-size: 12px; border-color: black;">
+        Change Flow Factors
+      </button>
+      <button class="esri-button" id="overallResults" type = "button", value = "begin" style="font-size: 12px; display:none; border-color: black; background-color: #c6eb8c; color:black; font-weight: bolder;">
+        Overall Results
+      </button>
     </div>
   </div>
-  <div id="resultDiv" class="esri-widget">
-    <div class="count">
-      Selected Parcels:
-      <div class="count" id="count">0</div>
+  <div id="resultDiv" class="esri-widget" >
+    <div class = "topRowContainer">
+      <div class="count">
+        Selected Parcels:
+        <div class="count" id="count">0</div>
+      </div>
+      <select id = "selectionGraphicType" class = "dropdown" style="margin-bottom: 8px; width: 140px;">
+        <option value="Current Statistics">Current Statistics</option>
+        <option value="Projection Results">Projection Results</option>
+      </select>
+    </div>
+    <div id = "existingStats" class="charts" style="display: block;">
+      <div>
+        <canvas id="water-usage-chart" />
+      </div>
+      <div>
+        <canvas id="water-chart" />
+      </div>
+      <div>
+        <canvas id="sewer-chart" />
+      </div>
+    </div>
+    <div id = "projectedStats" class="charts" style="display: none;">
+      <div>
+        <canvas id="selectionWaterChart"  />
+      </div>
+      <div>
+        <canvas id="selectionSewerChart"  />
+      </div>
+    </div>
+  </div>
+  <div id="overallResultsChartDiv" class="esri-widget" >
+    <div class = "topRowContainer" style="align-items: center;">
+      County / District Level Results <br>
+      <div class = "topRowContainerInner">
+        <select id = "districtResult" class = "dropdown">
+          <option value="" selected disabled>District</option>
+        </select>
+        <i id = "close-icon-overall-results" class="far fa-window-close fa-2x" style="margin-left: 10px; margin-top: 10px;"></i>
+      </div>
     </div>
     <div class="charts">
       <div>
-        <canvas id="water-usage-chart" height="250" width="260" />
+        <canvas id = "overallWaterChart"  />
       </div>
       <div>
-        <canvas id="water-chart" height="250" width="260" />
+        <canvas id = "overallSewerChart" />
+      </div>
+      <!-- table goes here -->
+    </div>
+  </div>
+  <div id="basinResultsChartDiv" class="esri-widget" >
+    <div class = "topRowContainer" style="align-items: center;">
+      Pump Station Basin Level Results <br>
+      <div class = "topRowContainerInner">
+        <select id = "basinResult" class = "dropdown">
+          <option value="" selected disabled>Basin</option>
+        </select>
+        <i id = "close-icon-basin-results" class="far fa-window-close fa-2x" style="margin-left: 10px; margin-top: 10px;"></i>
+      </div>
+    </div>
+    <div class="charts">
+      <div>
+        <canvas id = "basinWaterChart" />
       </div>
       <div>
-        <canvas id="sewer-chart" width="250" height="300" />
+        <canvas id = "basinSewerChart" />
       </div>
-      
+      <!-- table goes here -->
     </div>
   </div>
   <div id="paneDiv" class="esri-widget">
@@ -77,69 +143,103 @@
   <div id="basemapGalleryDiv"></div>
 
   <div id = "editArea" class="editArea-container">
-    <table class = 'table', id = "ffTable">
-      <col style="width:150px">
-      <col style="width:10px">
-      <col style="width:10px">
-      <col style="width:10px">
-      <thead>
-        <tr>
-          <th></th>
-          <th>2025</th>
-          <th>2030</th>
-          <th>2040</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>Water Flow Factor</th>
-          <td><input id="waterFactor_2025" type="number" min = 0 class = "ffInput"></td>
-          <td><input id="waterFactor_2030" type="number" min = 0 class = "ffInput" ></td>
-          <td><input id="waterFactor_2040" type="number" min = 0 class = "ffInput" ></td>
-        </tr>
-        <tr>
-          <th>Sewer Flow Factor</th>
-          <td><input id="sewerFactor_2025" type = "number" min = 0 class = "ffInput"></td>
-          <td><input id="sewerFactor_2030" type = "number" min = 0 class = "ffInput"></td>
-          <td><input id="sewerFactor_2040" type = "number" min = 0 class = "ffInput"></td>
-        </tr>
-        </tbody>
-    </table>
-    <button id = "submitFf" class="button">Save Projections</button>
-    <select id = "district" class = "dropdown">
-      <option value="" selected disabled>District</option>
-    </select> 
+    <div class = "iconContainer">
+      <i id = "close-icon-ffinput" class="far fa-window-close fa-2x"></i>
+    </div>
+    <div class="input-area-container">
+      <table class = 'table', id = "ffTable">
+        <col style="width:150px">
+        <col style="width:10px">
+        <col style="width:10px">
+        <col style="width:10px">
+        <thead>
+          <tr>
+            <th></th>
+            <th>2025</th>
+            <th>2030</th>
+            <th>2040</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th>Water Flow Factor</th>
+            <td><input id="waterFactor_2025" type="number" min = 0 class = "ffInput"></td>
+            <td><input id="waterFactor_2030" type="number" min = 0 class = "ffInput" ></td>
+            <td><input id="waterFactor_2040" type="number" min = 0 class = "ffInput" ></td>
+          </tr>
+          <tr>
+            <th>Sewer Flow Factor</th>
+            <td><input id="sewerFactor_2025" type = "number" min = 0 class = "ffInput"></td>
+            <td><input id="sewerFactor_2030" type = "number" min = 0 class = "ffInput"></td>
+            <td><input id="sewerFactor_2040" type = "number" min = 0 class = "ffInput"></td>
+          </tr>
+          </tbody>
+      </table>
+      <div class = "topRowContainer">
+        <div class = "dropdownContainer">
+          <select id = "district" class = "dropdown">
+            <option value="" selected disabled>District</option>
+          </select> 
+          <select id = "landUse" class = "dropdown">
+            Land Use
+          </select>
+        </div>
+        <button id = "submitFf" class="button" style="margin-right: 50px;">Save Projections</button>
+      </div>
+    </div>
   </div>
   <div id = "devProjectionsArea" class="editArea-container">
-    <table class = 'table' id = 'luTable'>
-      <col style="width:150px">
-      <col style="width:20px">
-      <col style="width:20px">
-      <col style="width:20px">
-      <thead>
-        <tr>
-          <th></th>
-          <th>2025</th>
-          <th>2030</th>
-          <th>2040</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>Land Use</th>
-          <td><select id = "landUse_2025"  class = "luInput zoneTypeContainer"></select></td>
-          <td><select id = "landUse_2030"  class = "luInput zoneTypeContainer" ></select></td>
-          <td><select id = "landUse_2040"  class = "luInput zoneTypeContainer" ></select></td>
-        </tr>
-        <tr>
-          <th>% Developed</th>
-          <td><input id = "pDeveloped_2025" type = "number" min = 0 class = "luInput"></td>
-          <td><input id = "pDeveloped_2030" type = "number" min = 0 class = "luInput"></td>
-          <td><input id = "pDeveloped_2040" type = "number" min = 0 class = "luInput"></td>
-        </tr>
-        </tbody>
-    </table>
-    <button id = "submitLu" class="button" style="margin-left: 155px;">Save Projections</button>
+    <div class = "iconContainer">
+      <i id = "close-icon-luinput" class="far fa-window-close fa-2x"></i>
+    </div>
+      <div class="input-area-container">
+      <table class = 'table' id = 'luTable'>
+        <col style="width:150px">
+        <col style="width:20px">
+        <col style="width:20px">
+        <col style="width:20px">
+        <thead>
+          <tr>
+            <th></th>
+            <th>2025</th>
+            <th>2030</th>
+            <th>2040</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th>Land Use</th>
+            <td><select id = "landUse_2025"  class = "luInput zoneTypeContainer"></select></td>
+            <td><select id = "landUse_2030"  class = "luInput zoneTypeContainer" ></select></td>
+            <td><select id = "landUse_2040"  class = "luInput zoneTypeContainer" ></select></td>
+          </tr>
+          <tr>
+            <th>% Developed</th>
+            <td><input id = "pDeveloped_2025" type = "number" min = 0 class = "luInput"></td>
+            <td><input id = "pDeveloped_2030" type = "number" min = 0 class = "luInput"></td>
+            <td><input id = "pDeveloped_2040" type = "number" min = 0 class = "luInput"></td>
+          </tr>
+          </tbody>
+      </table>
+      <div class = "topRowContainer">
+        <div class = "dropdownContainer">
+          <b class = "otherText" style = 'font-size: 14px;'>Utility Connection Year</b>
+          <select id = "conexYear" class = "dropdown luInput">
+            <option value="2020">2020</option>
+            <option value="2025">2025</option>
+            <option value="2030">2030</option>
+            <option value="2040">2040</option>
+          </select>
+        </div>
+          <button id = "submitLu" class="button" style="margin-right: 50px;">Save Projections</button>
+      </div>
+    </div>
+  </div>
+  <div class = "progressInfoWindow slideIn">
+    <b class = "otherText" style="font-size: 20px;">
+      Your edits are being applied. <br><br>
+      All buttons will be disabled until processing is completed.<br> This window will close upon completion.
+    </b>
   </div>
   </body>
 </html> 

@@ -135,9 +135,9 @@ const zone_Unknown = {
     }
 };
 
-const activeWater = {
+const waterUser2020 = {
     type: "simple-fill",
-    color: [0, 255, 255, 0.4],
+    color: [0,76,153, 0.3],
     style: "solid",
     outline: {
     width: 0.1,
@@ -145,9 +145,69 @@ const activeWater = {
     }
 };
 
-const activeSewer = {
+const waterUser2025 = {
     type: "simple-fill",
-    color: [0, 255, 0, 0.4],
+    color: [0,255,255, 0.3],
+    style: "solid",
+    outline: {
+    width: 0.1,
+    color: [55, 55, 55, 0.25]
+    }
+};
+
+const waterUser2030 = {
+    type: "simple-fill",
+    color: [255,128,0, 0.3],
+    style: "solid",
+    outline: {
+    width: 0.1,
+    color: [55,55,55, 0.25]
+    }
+};
+
+const waterUser2040 = {
+    type: "simple-fill",
+    color: [255,255,0, 0.3],
+    style: "solid",
+    outline: {
+    width: 0.1,
+    color: [55, 55, 55, 0.25]
+    }
+};
+
+const sewerUser2020 = {
+    type: "simple-fill",
+    color: [0,102,51, 0.5],
+    style: "solid",
+    outline: {
+    width: 0.1,
+    color: [55, 55, 55, 0.25]
+    }
+};
+
+const sewerUser2025 = {
+    type: "simple-fill",
+    color: [255,128,0, 0.3],
+    style: "solid",
+    outline: {
+    width: 0.1,
+    color: [55, 55, 55, 0.25]
+    }
+};
+
+const sewerUser2030 = {
+    type: "simple-fill",
+    color: [255,255,51, 0.3],
+    style: "solid",
+    outline: {
+    width: 0.1,
+    color: [55,55,55, 0.25]
+    }
+};
+
+const sewerUser2040 = {
+    type: "simple-fill",
+    color: [255,102,102, 0.3],
     style: "solid",
     outline: {
     width: 0.1,
@@ -187,12 +247,21 @@ const utilitiesRender = {
     }
     },
     uniqueValueInfos: [{
-    value: "Yes",
-    symbol: bothUtilities
-    }, {
-    value: "No",
-    symbol: noUtilities
-    }]
+        value: "2020",
+        symbol: bothUtilities
+        }, {
+        value: "2025",
+        symbol: bothUtilities
+        },{
+        value: "2030",
+        symbol: bothUtilities
+        },{
+        value: "2040",
+        symbol: bothUtilities
+        },{
+        value: "",
+        symbol: noUtilities
+        }]
 };
 
 // construct utilities renderer
@@ -208,10 +277,19 @@ const waterRenderer = {
     }
     },
     uniqueValueInfos: [{
-    value: "Yes",
-    symbol: activeWater
+    value: "2020",
+    symbol: waterUser2020
     }, {
-    value: "No",
+    value: "2025",
+    symbol: waterUser2025
+    },{
+    value: "2030",
+    symbol: waterUser2030
+    },{
+    value: "2040",
+    symbol: waterUser2040
+    },{
+    value: "",
     symbol: noUtilities
     }]
 };
@@ -228,10 +306,19 @@ const sewerRenderer = {
     }
     },
     uniqueValueInfos: [{
-    value: "Yes",
-    symbol: activeSewer
-    }, {
-    value: "No",
+    value: "2020",
+    symbol: sewerUser2020
+    },  {
+    value: "2025",
+    symbol: sewerUser2025
+    },{
+    value: "2030",
+    symbol: sewerUser2030
+    },{
+    value: "2040",
+    symbol: sewerUser2040
+    },{
+    value: "",
     symbol: noUtilities
     }]
 };

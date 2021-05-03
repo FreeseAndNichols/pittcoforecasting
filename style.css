@@ -73,12 +73,40 @@ body {
   max-height: 100%;
 }
 
-#queryDiv,
-#resultDiv {
-  min-width: 250px;
+#queryDiv {
+  min-width: 400px;
   font-size: 14px;
   padding: 10px;
   display: none;
+  overflow-y: auto;
+  overflow-x:hidden;
+}
+
+#resultDiv {
+  min-width: 450px;
+  font-size: 14px;
+  padding: 10px;
+  display: none;
+  overflow-y: auto;
+  overflow-x:hidden;
+}
+
+#existingStats {
+  min-width: 450px;
+}
+
+#overallResultsChartDiv {
+  min-width: 600px;
+  font-size: 14px;
+  padding: 10px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+#basinResultsChartDiv {
+  min-width: 600px;
+  font-size: 14px;
+  padding: 10px;
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -189,6 +217,8 @@ cursor: pointer; /* Cursor on hover */
 }
 
 .editArea-container {
+  display: flex;
+  flex-direction: column;
   position: absolute;
   border: solid;
   border-width: .1px;
@@ -198,7 +228,6 @@ cursor: pointer; /* Cursor on hover */
   float: right;
   background:white;
   line-height: 1.5em;
-  overflow: auto;
 }
 
 .editArea-container div {
@@ -214,9 +243,9 @@ align-items: center;
 border: none;
 border-radius: 2px;
 color: white;
-margin: 10px 10px;
-margin-left:20px;
-padding: 6px 20px;
+margin: 10px 15px;
+padding: 6px 20px 6px;
+height: 45;
 text-align: center;
 text-decoration: none;
 display: inline-block;
@@ -229,10 +258,10 @@ color: rgb(59, 59, 59);
 }
 
 .ffInput {
-width: 50px;
+width: 65px;
 }
 .luInput {
-width: 55px;
+width: 65px;
 }
 
 .dropdown {
@@ -243,6 +272,163 @@ margin-top: 10px;
 width: 125px;
 font-family: "Avenir Next","Helvetica Neue","Helvetica","Arial","sans-s";
 font-weight: bold;
-
-
 }
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 90px;
+  height: 34px;
+}
+
+.switch input {display:none;}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 15%;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #dddddd;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height:25px;
+  width: 25px;
+  top:0.3px;
+  left: 3px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #c6eb8c;
+}
+
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(58px);
+  -ms-transform: translateX(58px);
+  transform: translateX(58px);
+}
+
+/*------ ADDED CSS ---------*/
+.on
+{
+  display: none;
+}
+
+.on
+{
+  color: black;
+  position: absolute;
+  transform: translate(-50%,-50%);
+  top: 50%;
+  left: 35%;
+  font-size: 10px;
+  font-weight: bold;
+  font-family: Verdana, sans-serif;
+}
+
+.off
+{
+  color: black;
+  position: absolute;
+  transform: translate(-50%,-50%);
+  top: 50%;
+  left: 65%;
+  font-size: 10px;
+  font-weight: bold;
+  font-family: Verdana, sans-serif;
+}
+
+input:checked+ .slider .on
+{display: block;}
+
+input:checked + .slider .off
+{display: none;}
+
+/*--------- END --------*/
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;}
+
+
+.topRowContainer {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width:100%;
+}
+
+.dropdownContainer {
+  display: flex;
+  flex-direction: column;
+}
+
+.selectYear {
+  text-align-last: center;
+}
+
+.otherText {
+  font-family: "Avenir Next","Helvetica Neue",Helvetica,Arial,sans-s;
+  color: rgb(59, 59, 59);
+}
+
+.progressInfoWindow {
+  position: fixed;
+  left: 50%;
+  top: 85%;
+  transform: translate(-50%, -50%);
+  margin: 0 auto;
+  width: 650px;
+  height: fit-content;
+  background-color: rgba(185, 229, 255, 0.884);
+  opacity: 90%;
+  border-style: solid;
+  border-color: black;
+  padding: 12px;
+  transition: all 1s;
+}
+
+.slideIn {
+  top:120%;
+}
+
+.editsComplete{
+  background-color: #c6eb8c;
+  font-family: "Avenir Next","Helvetica Neue",Helvetica,Arial,sans-s;
+  color: rgb(59, 59, 59);
+  font-size: 20px;
+  font-weight: bold;
+}
+
+
+.topRowContainerInner {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width:fit-content;
+  margin-right: 1%;
+}
+
+.iconContainer {
+  height: 100%;
+  float:right;
+}
+
+
