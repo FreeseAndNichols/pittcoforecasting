@@ -17,7 +17,7 @@ require([
     const landUses = ['A-1: Agricultural', 'RE: Residential Estates', 'R-1: Suburban Sudivision', 'RMF: Multi-Family', 'RPD: Planned Unit Development',
                       'MHP: Manufactured Housing Park', 'RC-1: Combined Subdivision', 'B-1: Business (Limited)', 'B-2: Business (General)', 'M-1: Light Industry', 'M-2: Heavy Industry',
                       'C-1: Conservation', 'DZ: Double Zoned', 'TZ: Town', 'UK: Unknown'];
-    const basins = ['a','b','c','d','e','f'];
+    const basins = ['All Basins','a','b','c','d','e','f'];
     const districts = ["All Districts","Staunton River", "Callands-Gretna", "Chatham", "Blairs", "Tunstall", "Dan River", "Westover"];
     const ffByLandUse = {'waterFactor_2025':{'A-1':100,'B-1':100,'B-2':100,'C-1':100,'DZ':100,'M-1':100,'M-2':100,'MHP':100,'R-1':100,'RC-1':100,'RE':100,'RMF':100,'RPD':100,'TZ':100,'UK':100},
                          'waterFactor_2030':{'A-1':100,'B-1':100,'B-2':100,'C-1':100,'DZ':100,'M-1':100,'M-2':100,'MHP':100,'R-1':100,'RC-1':100,'RE':100,'RMF':100,'RPD':100,'TZ':100,'UK':100},
@@ -196,7 +196,7 @@ require([
     };
 
     basinContainer = document.getElementById('basinResult');
-    for (var i = 0; i< landUses.length; i++) {
+    for (var i = 0; i< basins.length; i++) {
         var optn = basins[i];
         var el = document.createElement("option");
         el.textContent = optn;
@@ -248,6 +248,26 @@ require([
             };
         };
     });
+
+    function selectedBasinRenderer(){
+        const selectedBasin = $("#basinResult option:selected").val();
+        const basinQuery = sceneLayer.createQuery();
+        if (selectedBasin != 'All Basins') {
+            basinQuery.where = `psBasin = '${selectedBasin}'`;
+            sceneLayerView.effect = {
+                filter: basinQuery,
+                excludedEffect: "opacity(40%) blur(1.5px) brightness(0.8)",
+                includedEffect: "brightness(1.2)"};
+        }
+        else {
+            basinQuery.where = `Zone is not null`;
+            sceneLayerView.effect = {
+                filter: basinQuery,
+                excludedEffect: "opacity(40%) blur(1.5px) brightness(0.8)",
+                includedEffect: "brightness(1.2)"
+            };
+        };
+    };
     
     $('#submitFf').bind('click',function(){
         $(".progressInfoWindow").toggleClass('slideIn');
@@ -282,51 +302,51 @@ require([
             ffByLandUse["sewerFactor_2030"][selectedZoning] = parseInt(flowFactorInput["sewerFactor_2030"])
             ffByLandUse["sewerFactor_2040"][selectedZoning] = parseInt(flowFactorInput["sewerFactor_2040"])
 
+            var count = 0;
             var chunk = 1000;
+            const totalIterations = Math.floor(results.features.length/chunk)
             for (i=0,j=results.features.length; i<j; i+=chunk) {
-            temparray = results.features.slice(i,i+chunk);
-            var updateFeatures = temparray.map(function(feature,i){
-                esriConfig.request.timeout = 300000;
-                feature.geometry = null;
-                feature.attributes["waterFactor_2025"] = flowFactorInput["waterFactor_2025"];
-                feature.attributes["waterFactor_2030"] = flowFactorInput["waterFactor_2030"];
-                feature.attributes["waterFactor_2040"] = flowFactorInput["waterFactor_2040"];
-                feature.attributes["sewerFactor_2025"] = flowFactorInput["sewerFactor_2025"];
-                feature.attributes["sewerFactor_2030"] = flowFactorInput["sewerFactor_2030"];
-                feature.attributes["sewerFactor_2040"] = flowFactorInput["sewerFactor_2040"];
-                feature.attributes["waterDemand_2030"] = Math.round(flowFactorInput["waterFactor_2030"] * feature.attributes["area"] * feature.attributes["pDeveloped_2025"]);
-                feature.attributes["waterDemand_2025"] = Math.round(flowFactorInput["waterFactor_2025"] * feature.attributes["area"] * feature.attributes["pDeveloped_2030"]);
-                feature.attributes["waterDemand_2040"] = Math.round(flowFactorInput["waterFactor_2040"] * feature.attributes["area"] * feature.attributes["pDeveloped_2040"]);
-                feature.attributes["sewerLoad_2025"] =   Math.round(flowFactorInput["sewerFactor_2025"] * feature.attributes["area"] * feature.attributes["pDeveloped_2025"]);
-                feature.attributes["sewerLoad_2030"] =   Math.round(flowFactorInput["sewerFactor_2030"] * feature.attributes["area"] * feature.attributes["pDeveloped_2030"]);
-                feature.attributes["sewerLoad_2040"] =   Math.round(flowFactorInput["sewerFactor_2040"] * feature.attributes["area"] * feature.attributes["pDeveloped_2040"]);
-    
-                return feature
-            });
+                temparray = results.features.slice(i,i+chunk);
+                var updateFeatures = temparray.map(function(feature,i){
+                    esriConfig.request.timeout = 300000;
+                    feature.geometry = null;
+                    feature.attributes["waterFactor_2025"] = flowFactorInput["waterFactor_2025"];
+                    feature.attributes["waterFactor_2030"] = flowFactorInput["waterFactor_2030"];
+                    feature.attributes["waterFactor_2040"] = flowFactorInput["waterFactor_2040"];
+                    feature.attributes["sewerFactor_2025"] = flowFactorInput["sewerFactor_2025"];
+                    feature.attributes["sewerFactor_2030"] = flowFactorInput["sewerFactor_2030"];
+                    feature.attributes["sewerFactor_2040"] = flowFactorInput["sewerFactor_2040"];
+                    feature.attributes["waterDemand_2030"] = Math.round(flowFactorInput["waterFactor_2030"] * feature.attributes["area"] * feature.attributes["pDeveloped_2025"]);
+                    feature.attributes["waterDemand_2025"] = Math.round(flowFactorInput["waterFactor_2025"] * feature.attributes["area"] * feature.attributes["pDeveloped_2030"]);
+                    feature.attributes["waterDemand_2040"] = Math.round(flowFactorInput["waterFactor_2040"] * feature.attributes["area"] * feature.attributes["pDeveloped_2040"]);
+                    feature.attributes["sewerLoad_2025"] =   Math.round(flowFactorInput["sewerFactor_2025"] * feature.attributes["area"] * feature.attributes["pDeveloped_2025"]);
+                    feature.attributes["sewerLoad_2030"] =   Math.round(flowFactorInput["sewerFactor_2030"] * feature.attributes["area"] * feature.attributes["pDeveloped_2030"]);
+                    feature.attributes["sewerLoad_2040"] =   Math.round(flowFactorInput["sewerFactor_2040"] * feature.attributes["area"] * feature.attributes["pDeveloped_2040"]);
+        
+                    return feature
+                });
                 console.log(updateFeatures);
-                console.log(ffByLandUse);
-
-                
+                console.log(i,j);
                 sceneLayer.applyEdits({
                     updateFeatures: updateFeatures
                 }).then(function(results){
-                    console.log("update results",results.updateFeatureResults.length);    
-                }).then(function(){
-                    if (j-i <= 1000) {
+                    console.log("update results",results.updateFeatureResults.length);  
+                    count += 1
+                }).then(function(){  
+                    if (count == totalIterations + 1) {
+                        console.log('done!');
                         $('.progressInfoWindow').toggleClass('slideIn');
                         $('#editArea').css('display','none')
                         $("#queryDiv").find('button, checkbox').prop('disabled',false);
                         $(".editArea-container").find('button, input, select').prop('disabled',false);    
                         sceneLayerView.effect = "none";
-                    }
+                    };
                 }).catch(function(err){
                     console.log(err)
                 });
-
-            }
-           
-        })
+            };
         });
+    });
     
     $('#submitLu').bind('click', function(){sceneLayerView.effect="none"}).bind('click', function(){
         $('.progressInfoWindow').toggleClass('slideIn');
@@ -1071,8 +1091,7 @@ require([
     createOverallSewerChart();
     createOverallWaterChart();
     $('#districtResult').bind('change', function(){queryOverallResultStats()});
-    $('#basinResult').bind('change',function(){queryBasinResultStats()});
-    // createOverallWaterChart();
+    $('#basinResult').bind('change',function(){queryBasinResultStats(); selectedBasinRenderer()});
 
     function createWaterUserChart() {
     
@@ -1201,6 +1220,10 @@ require([
         updateChart(waterChart, [0, 0]);
         updateChart(sewerChart, [0, 0]);
         updateChart(waterUsageChart, [0]);
+        updateChart(overallWaterChart, [0]);
+        updateChart(overallSewerChart, [0]);
+        updateChart(basinWaterChart, [0]);
+        updateChart(basinSewerChart,[0]);
         $('#count').html = 0
     };
     
@@ -1216,10 +1239,20 @@ require([
     });
     
     $("#overallResults").bind('click', function(){
+        clearCharts()
+        queryOverallResultStats()
         $('#overallResultsChartDiv').show();
+        $('#basinResultsChartDiv').hide()
+        clearGeometry();
+        $('#basinResult').prop('selectedIndex',0);
     });
     $("#basinResults").bind('click',function(){
+        clearCharts();
+        queryBasinResultStats();
         $('#basinResultsChartDiv').show();
+        $('#overallResultsChartDiv').hide();
+        clearGeometry();
+        $('#districtResult').prop('selectedIndex',0);
     });
 
     $("#togBtn").on('change', function() {
@@ -1259,6 +1292,12 @@ require([
 
     $("#close-icon-luinput").bind('click', function(){
         $('#devProjectionsArea').hide()
+    })
+
+    $("#close-icon-selection-results").bind('click', function(){
+        $('#resultDiv').hide();
+        clearGeometry();
+        clearHighlighting();
     })
 
     $("#selectionGraphicType").bind('change', function(){

@@ -95,6 +95,18 @@ body {
   min-width: 450px;
 }
 
+#projectedStats {
+  min-width: 450px;
+}
+
+#overallChartDiv {
+  min-width: 450px;
+}
+
+#basinChartDiv {
+  min-width: 450px;
+}
+
 #overallResultsChartDiv {
   min-width: 600px;
   font-size: 14px;
@@ -431,4 +443,6 @@ input:checked + .slider .off
   float:right;
 }
 
-
+.charts {
+  width:max-content
+}

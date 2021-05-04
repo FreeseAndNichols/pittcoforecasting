@@ -68,28 +68,31 @@
         Selected Parcels:
         <div class="count" id="count">0</div>
       </div>
-      <select id = "selectionGraphicType" class = "dropdown" style="margin-bottom: 8px; width: 140px;">
-        <option value="Current Statistics">Current Statistics</option>
-        <option value="Projection Results">Projection Results</option>
-      </select>
+      <div class = "topRowContainerInner">
+        <select id = "selectionGraphicType" class = "dropdown" style="margin-bottom: 8px; width: 140px;">
+          <option value="Current Statistics">Current Statistics</option>
+          <option value="Projection Results">Projection Results</option>
+        </select>
+        <i id = "close-icon-selection-results" class="far fa-window-close fa-2x" style="margin-left: 10px; margin-top: 5px;"></i>
+      </div>
     </div>
     <div id = "existingStats" class="charts" style="display: block;">
       <div>
-        <canvas id="water-usage-chart" />
+        <canvas id="water-usage-chart"  width="425px" />
       </div>
       <div>
-        <canvas id="water-chart" />
+        <canvas id="water-chart"  width="425px" />
       </div>
       <div>
-        <canvas id="sewer-chart" />
+        <canvas id="sewer-chart" width="425px"  />
       </div>
     </div>
     <div id = "projectedStats" class="charts" style="display: none;">
       <div>
-        <canvas id="selectionWaterChart"  />
+        <canvas id="selectionWaterChart"  height="225px"/>
       </div>
       <div>
-        <canvas id="selectionSewerChart"  />
+        <canvas id="selectionSewerChart"  height="225px" />
       </div>
     </div>
   </div>
@@ -103,12 +106,12 @@
         <i id = "close-icon-overall-results" class="far fa-window-close fa-2x" style="margin-left: 10px; margin-top: 10px;"></i>
       </div>
     </div>
-    <div class="charts">
+    <div id = "overallChartDiv" class="charts">
       <div>
-        <canvas id = "overallWaterChart"  />
+        <canvas id = "overallWaterChart" height="225px" />
       </div>
       <div>
-        <canvas id = "overallSewerChart" />
+        <canvas id = "overallSewerChart" height="225px"/>
       </div>
       <!-- table goes here -->
     </div>
@@ -123,12 +126,12 @@
         <i id = "close-icon-basin-results" class="far fa-window-close fa-2x" style="margin-left: 10px; margin-top: 10px;"></i>
       </div>
     </div>
-    <div class="charts">
+    <div id = "basinChartDiv" class="charts">
       <div>
-        <canvas id = "basinWaterChart" />
+        <canvas id = "basinWaterChart" height="225px"/>
       </div>
       <div>
-        <canvas id = "basinSewerChart" />
+        <canvas id = "basinSewerChart" height="225px"/>
       </div>
       <!-- table goes here -->
     </div>
