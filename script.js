@@ -11,13 +11,17 @@ require([
     "esri/renderers/UniqueValueRenderer",
     "esri/renderers/ClassBreaksRenderer",
     "esri/widgets/BasemapToggle",
+    "esri/portal/PortalItem"
     
     ], function (esriConfig, WebMap, MapView, FeatureLayer, SketchViewModel, GraphicsLayer, Expand, Legend,
-    promiseUtils, UniqueValueRenderer, ClassBreaksRenderer, BasemapToggle) {
+    promiseUtils, UniqueValueRenderer, ClassBreaksRenderer, BasemapToggle, PortalItem) {
     const landUses = ['A-1: Agricultural', 'RE: Residential Estates', 'R-1: Suburban Sudivision', 'RMF: Multi-Family', 'RPD: Planned Unit Development',
                       'MHP: Manufactured Housing Park', 'RC-1: Combined Subdivision', 'B-1: Business (Limited)', 'B-2: Business (General)', 'M-1: Light Industry', 'M-2: Heavy Industry',
                       'C-1: Conservation', 'DZ: Double Zoned', 'TZ: Town', 'UK: Unknown'];
-    const basins = ['All Basins','a','b','c','d','e','f'];
+    const basins = ['All Basins','Blairs (E-toys)','Brockway','Chatham Middle School','Cross Creek Subdivision','Deercrest Lane (C)','Gretna Industrial Park (GIS)',
+                    'Hodnetts Mill Rd','Inca Lane (VIR)','Mount Hermon (Laurel Woods)','Pine Lake Rd (B)','Ragsdale Rd (A)','Ringgold East Industrial Park',
+                    'Tightsqueeze (Times Fiber)','Witcher Rd'];
+    const sewersheds = ['Altavista','Chatham','Danville','Gretna'];
     const districts = ["All Districts","Staunton River", "Callands-Gretna", "Chatham", "Blairs", "Tunstall", "Dan River", "Westover"];
     const ffByLandUse = {'waterFactor_2025':{'A-1':100,'B-1':100,'B-2':100,'C-1':100,'DZ':100,'M-1':100,'M-2':100,'MHP':100,'R-1':100,'RC-1':100,'RE':100,'RMF':100,'RPD':100,'TZ':100,'UK':100},
                          'waterFactor_2030':{'A-1':100,'B-1':100,'B-2':100,'C-1':100,'DZ':100,'M-1':100,'M-2':100,'MHP':100,'R-1':100,'RC-1':100,'RE':100,'RMF':100,'RPD':100,'TZ':100,'UK':100},
@@ -28,9 +32,10 @@ require([
 
     const sketchLayer = new GraphicsLayer();
     
+    esriConfig.portalUrl = "https://gisportal3.freese.com/portal/"
     const map = new WebMap({
         portalItem: {
-        id: "71f618cdbf414cc19663b0fe5f2fef20"
+        id: "6769d67fcf2e4891b3896bc81722e2e6"
         }
     });
     
@@ -81,18 +86,6 @@ require([
     };
     
     map.load().then(function () {
-        sceneLayer = map.allLayers.find(function (layer) {
-        if (layer.title === "sewer_water_landUse") {
-            map.add(layer)
-            return layer.title === "sewer_water_landUse"
-        }
-        });
-    
-        map.removeAll();
-        map.add(sceneLayer);
-        sceneLayer.outFields = ["*"];
-        sceneLayer.renderer = zoningRenderer
-
         $('#developmentForecast').addClass('disabled');
         $('#basinResults').addClass('disabled');
 
@@ -120,14 +113,15 @@ require([
         $('#devProjectionsArea').css('display','none');
 
         map.removeAll()
+
         sceneLayer = new FeatureLayer({
-        url: "https://services.arcgis.com/t6fsA0jUdL7JkKG2/arcgis/rest/services/sewerWaterDevelopment/FeatureServer/0",
+        url: "https://fwgis-web3.freese.com/arcgis/rest/services/Hosted/SewerAndWater_Copy/FeatureServer/0",
         outFields: ['waterUsage','sewerLoad','waterUser','sewerUser','sewerAndWater','waterFactor_2025','waterFactor_2030','waterFactor_2040',
                     'sewerFactor_2025','sewerFactor_2030','sewerFactor_2040','zone',
                     'landUse_2025','landUse_2030','landUse_2040',
                     'pDeveloped_2025','pDeveloped_2030','pDeveloped_2040',
                     'waterDemand_2025','waterDemand_2030','waterDemand_2040',
-                    'sewerLoad_2025','sewerLoad_2030','sewerLoad_2040','psBasin','area'], popupTemplate: {
+                    'sewerLoad_2025','sewerLoad_2030','sewerLoad_2040','psBasin','area','Sewershed'], popupTemplate: {
             "title": "Title",
             "content":"<b>Zoning 2020: </b>{zone}<br><b>Water Flow Factor 2025: </b>{waterFactor_2025}<br><b>Water Flow Factor 2030: </b>{waterFactor_2030}<br><b>Water Flow Factor 2040: </b>{waterFactor_2040}<br><b>Sewer Flow Factor 2025: </b>{sewerFactor_2025}<br><b>Sewer Flow Factor 2030: </b>{sewerFactor_2030}<br><b>Sewer Flow Factor 2040: </b>{sewerFactor_2040}<br><b>Zoning 2025: </b>{landUse_2025}<br><b>Zoning 2030: </b>{landUse_2030}<br><b>Zoning 2040: </b>{landUse_2040}<br><b>% Developed 2025: </b>{pDeveloped_2025}<br><b>% Developed 2030: </b>{pDeveloped_2030}<br><b>% Developed 2040: </b>{pDeveloped_2040}</br><b>Water Demand 2025: </b>{waterDemand_2025}</br><b>Water Demand 2030: </b>{waterDemand_2030}</br><b>Water Demand 2040: </b>{waterDemand_2040}</br><b>Sewer Load 2025: </b>{sewerLoad_2025}</br><b>Sewer Load 2030: </b>{sewerLoad_2030}</br><b>Sewer Load 2040: </b>{sewerLoad_2040}</br><b>Pump Station Basin: </b>{psBasin}"
         }});
@@ -211,7 +205,7 @@ require([
         console.log(selectedDistrict, selectedZoning);
         const districtQuery = sceneLayer.createQuery();
         if (selectedDistrict != 'All Districts') {
-            districtQuery.where = `Districts = '${selectedDistrict}'`;
+            districtQuery.where = `districts = '${selectedDistrict}'`;
             sceneLayerView.effect = {
                 filter: districtQuery,
                 excludedEffect: "opacity(40%) blur(1.5px) brightness(0.8)",
@@ -233,7 +227,7 @@ require([
         console.log(selectedDistrict, selectedZoning);
         const districtQuery = sceneLayer.createQuery();
         if (selectedDistrict != 'All Districts') {
-            districtQuery.where = `Districts = '${selectedDistrict}'`;
+            districtQuery.where = `districts = '${selectedDistrict}'`;
             sceneLayerView.effect = {
                 filter: districtQuery,
                 excludedEffect: "opacity(40%) blur(1.5px) brightness(0.8)",
@@ -260,7 +254,7 @@ require([
                 includedEffect: "brightness(1.2)"};
         }
         else {
-            basinQuery.where = `Zone is not null`;
+            basinQuery.where = `psBasin IS NOT NULL`;
             sceneLayerView.effect = {
                 filter: basinQuery,
                 excludedEffect: "opacity(40%) blur(1.5px) brightness(0.8)",
@@ -277,8 +271,8 @@ require([
         const selectedZoning = $("#landUse option:selected").val().split(':')[0];
         console.log(selectedDistrict, ': ', selectedZoning)
         const districtQuery = sceneLayer.createQuery();
-        districtQuery.where = `Districts = '${selectedDistrict}' AND Zone ='${selectedZoning}'`;
-        districtQuery.outFields = '*';
+        districtQuery.where = `districts = '${selectedDistrict}' AND Zone ='${selectedZoning}'`;
+        // districtQuery.outFields = '*';
         sceneLayerView.queryFeatures(districtQuery).then(function(results){            
             var inputs = $('.ffInput'),
                 k  = [].map.call(inputs, function( input ) {
@@ -330,7 +324,7 @@ require([
                 sceneLayer.applyEdits({
                     updateFeatures: updateFeatures
                 }).then(function(results){
-                    console.log("update results",results.updateFeatureResults.length);  
+                    console.log("update results",results.updateFeatureResults);  
                     count += 1
                 }).then(function(){  
                     if (count == totalIterations + 1) {
@@ -398,7 +392,7 @@ require([
                 sceneLayer.applyEdits({
                     updateFeatures: updateFeatures
                 }).then(function(results){
-                    console.log("update results",results.updateFeatureResults.length);    
+                    console.log("update results",results.updateFeatureResults);    
                     
                 }).then(function(){
                     if (j-i <= 1000){
@@ -726,9 +720,9 @@ require([
         const selectedDistrict = $("#districtResult option:selected").val();
         const query = sceneLayerView.createQuery();
         if (selectedDistrict == 'All Districts') {
-            query.where = `Districts is not null`
+            query.where = `districts is not null`
         }else {
-        query.where = `Districts = '${selectedDistrict}'`;
+        query.where = `districts = '${selectedDistrict}'`;
         };
         query.outStatistics = statDefinitions;
 
