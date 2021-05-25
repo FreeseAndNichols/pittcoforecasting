@@ -141,7 +141,7 @@
     <input id="zoningRadio" class = "radio" type="radio" name="renderer" value="ZONING" checked/> Zoning<br />
     <input id="waterRadio" class = "radio" type="radio" name="renderer" value="WATER" /> Water<br />
     <input id="sewerRadio" class = "radio" type="radio" name="renderer" value="SEWER" /> Sewer<br />
-    <input id="utilsRadio" class = "radio" type="radio" name="renderer" value="UTILITIES" /> Water and Sewer<br />
+    <input id="utilsRadio" class = "radio" type="radio" name="renderer" value="UTILITIES" /> Combined Utilities<br />
   </div>
   <div id="basemapGalleryDiv"></div>
 
@@ -167,8 +167,8 @@
           <tr>
             <th>Water Flow Factor</th>
             <td><input id="waterFactor_2025" type="number" min = 0 class = "ffInput"></td>
-            <td><input id="waterFactor_2030" type="number" min = 0 class = "ffInput" ></td>
-            <td><input id="waterFactor_2040" type="number" min = 0 class = "ffInput" ></td>
+            <td><input id="waterFactor_2030" type="number" min = 0 class = "ffInput"></td>
+            <td><input id="waterFactor_2040" type="number" min = 0 class = "ffInput"></td>
           </tr>
           <tr>
             <th>Sewer Flow Factor</th>
@@ -218,9 +218,9 @@
           </tr>
           <tr>
             <th>% Developed</th>
-            <td><input id = "pDeveloped_2025" type = "number" min = 0 class = "luInput"></td>
-            <td><input id = "pDeveloped_2030" type = "number" min = 0 class = "luInput"></td>
-            <td><input id = "pDeveloped_2040" type = "number" min = 0 class = "luInput"></td>
+            <td><input id = "pDeveloped_2025" type = "number" min = 0 max = 100 class = "luInput" ></td>
+            <td><input id = "pDeveloped_2030" type = "number" min = 0 max = 100 class = "luInput"></td>
+            <td><input id = "pDeveloped_2040" type = "number" min = 0 max = 100 class = "luInput"></td>
           </tr>
           </tbody>
       </table>

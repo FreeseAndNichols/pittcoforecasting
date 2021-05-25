@@ -128,8 +128,8 @@ require([
                     'pDeveloped_2025','pDeveloped_2030','pDeveloped_2040',
                     'waterDemand_2025','waterDemand_2030','waterDemand_2040',
                     'sewerLoad_2025','sewerLoad_2030','sewerLoad_2040','psBasin','area'], popupTemplate: {
-            "title": "Title",
-            "content":"<b>Zoning 2020: </b>{zone}<br><b>Water Flow Factor 2025: </b>{waterFactor_2025}<br><b>Water Flow Factor 2030: </b>{waterFactor_2030}<br><b>Water Flow Factor 2040: </b>{waterFactor_2040}<br><b>Sewer Flow Factor 2025: </b>{sewerFactor_2025}<br><b>Sewer Flow Factor 2030: </b>{sewerFactor_2030}<br><b>Sewer Flow Factor 2040: </b>{sewerFactor_2040}<br><b>Zoning 2025: </b>{landUse_2025}<br><b>Zoning 2030: </b>{landUse_2030}<br><b>Zoning 2040: </b>{landUse_2040}<br><b>% Developed 2025: </b>{pDeveloped_2025}<br><b>% Developed 2030: </b>{pDeveloped_2030}<br><b>% Developed 2040: </b>{pDeveloped_2040}</br><b>Water Demand 2025: </b>{waterDemand_2025}</br><b>Water Demand 2030: </b>{waterDemand_2030}</br><b>Water Demand 2040: </b>{waterDemand_2040}</br><b>Sewer Load 2025: </b>{sewerLoad_2025}</br><b>Sewer Load 2030: </b>{sewerLoad_2030}</br><b>Sewer Load 2040: </b>{sewerLoad_2040}</br><b>Pump Station Basin: </b>{psBasin}"
+            "title": "Attributes",
+            "content":"<b>Pump Station Basin: </b>{psBasin}<br><b>Water Flow Factor 2025: </b>{waterFactor_2025}<br><b>Water Flow Factor 2030: </b>{waterFactor_2030}<br><b>Water Flow Factor 2040: </b>{waterFactor_2040}<br><b>Sewer Flow Factor 2025: </b>{sewerFactor_2025}<br><b>Sewer Flow Factor 2030: </b>{sewerFactor_2030}<br><b>Sewer Flow Factor 2040: </b>{sewerFactor_2040}<br><b>Zoning 2020: </b>{zone}<br><b>Zoning 2025: </b>{landUse_2025}<br><b>Zoning 2030: </b>{landUse_2030}<br><b>Zoning 2040: </b>{landUse_2040}<br><b>% Developed 2025: </b>{pDeveloped_2025}<br><b>% Developed 2030: </b>{pDeveloped_2030}<br><b>% Developed 2040: </b>{pDeveloped_2040}</br><b>Water Demand 2025: </b>{waterDemand_2025}</br><b>Water Demand 2030: </b>{waterDemand_2030}</br><b>Water Demand 2040: </b>{waterDemand_2040}</br><b>Sewer Load 2025: </b>{sewerLoad_2025}</br><b>Sewer Load 2030: </b>{sewerLoad_2030}</br><b>Sewer Load 2040: </b>{sewerLoad_2040}"
         }});
         map.add(sceneLayer);
         sceneLayer.renderer = zoningRenderer
@@ -151,6 +151,7 @@ require([
         legendExpand = new Expand({
             view: view,
             content: legend,
+            expanded: true,
             group: "upper_left_expand"
             }); 
         view.ui.add(legendExpand, 'top-left')
@@ -457,8 +458,15 @@ require([
         }
     });
     $("#polygon-geometry-button").bind('click',geometryButtonsClickHandler);
+    $("#polygon-geometry-button").bind('click', function(){
+        view.popup.close()
+    });
+
     $("#point-geometry-button").bind('click',geometryButtonsClickHandler);
-    
+    $("#point-geometry-button").bind('click', function(){
+        view.popup.close()
+    });
+
     function geometryButtonsClickHandler(event) {
         const geometryType = event.target.value;
         clearGeometry();
@@ -466,9 +474,10 @@ require([
     };
     
     $("#clearGeometry").bind("click",clearGeometry);
-    
+    $("#clearGeometry").bind("click",function(){
+        view.popup.close()
+    });
 
-    
     function flowFactorSessionBegin() {
         clearGeometry();
         clearCharts();
@@ -476,6 +485,7 @@ require([
         $('#resultDiv').css('display','none');
         $('#devProjectionsArea').css('display','none');
         $('#devProjectionsArea').css('display','none');
+        view.popup.close();
     };
     
     $('#startForecast').bind('click', flowFactorSessionBegin).bind('click',function(){$('.ffInput').val('')});
@@ -484,6 +494,7 @@ require([
     function zoningLandUseSessionBegin() {
         $('#editArea').css('display','none');
         $('#resultDiv').css('display','none');
+        view.popup.close();
         
         if ( $('#developmentForecast').hasClass('disabled') ){
             $('#devProjectionsArea').css('display','none');
@@ -1239,14 +1250,16 @@ require([
     });
     
     $("#overallResults").bind('click', function(){
-        clearCharts()
-        queryOverallResultStats()
+        view.popup.close();
+        clearCharts();
+        queryOverallResultStats();
         $('#overallResultsChartDiv').show();
         $('#basinResultsChartDiv').hide()
         clearGeometry();
         $('#basinResult').prop('selectedIndex',0);
     });
     $("#basinResults").bind('click',function(){
+        view.popup.close();
         clearCharts();
         queryBasinResultStats();
         $('#basinResultsChartDiv').show();
@@ -1312,6 +1325,38 @@ require([
         }
 
     });
+
+
+    $('#pDeveloped_2025, #pDeveloped_2030, #pDeveloped_2040').on('keydown keyup change', function(e){
+        if ($(this).val() > 100 
+            && e.keyCode !== 46 // keycode for delete
+            && e.keyCode !== 8 // keycode for backspace
+           ) {
+           e.preventDefault();
+           $(this).val(100);
+        }
+        else if (e.keyCode == 189 || e.keyCode == 109 || e.keyCode == 187) {
+            e.preventDefault();
+        }
+    });         
+
+    $('#pDeveloped_2030').blur(function(){
+        if ($('#pDeveloped_2030').val() - $("#pDeveloped_2025").val() < 0 && $(this).val() != ''){
+            alert('2030 development percentage is lower than 2025 development percentage. Please correct if this is not desired.');
+        }});
+
+    $('#pDeveloped_2040').blur(function(){
+        if ($('#pDeveloped_2040').val() - $("#pDeveloped_2030").val() < 0 && $(this).val() != ''){
+            alert('2040 development percentage is lower than 2030 development percentage. Please correct if this is not desired.');
+        }
+    });
+
+    $('#waterFactor_2025, #waterFactor_2030, #waterFactor_2040, #sewerFactor_2025, #sewerFactor_2030, #sewerFactor_2040').on('keydown keyup change', function (e){
+        if (e.keyCode == 189 || e.keyCode == 109 || e.keyCode == 187) {
+            e.preventDefault();
+        }
+    })
+   
 
     });
     
