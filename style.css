@@ -446,3 +446,15 @@ input:checked + .slider .off
 .charts {
   width:max-content
 }
+
+#helpWindow {
+  position: fixed;
+  right: 0;
+  margin-top: 50px;
+  height: 85%;
+  width: 25%;
+  background-color: white;
+  display: block;
+  z-index: 0;
+  border-style: solid;
+}

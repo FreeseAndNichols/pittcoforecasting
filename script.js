@@ -13,7 +13,7 @@ require([
     "esri/widgets/BasemapToggle",
     "esri/widgets/Search",
     "esri/widgets/Zoom", 
-    "esri/tasks/Locator"
+    "esri/tasks/Locator",
     
     ], function (esriConfig, WebMap, MapView, FeatureLayer, SketchViewModel, GraphicsLayer, Expand, Legend,
     promiseUtils, UniqueValueRenderer, ClassBreaksRenderer, BasemapToggle, Search, Zoom, Locator) {
@@ -69,6 +69,7 @@ require([
     view.ui.add(zoom, "top-left")
     $('#overallResultsChartDiv').hide()
     $('#basinResultsChartDiv').hide()
+    $('#helpWindow').hide()
 
     view.map.add(sketchLayer);
     $('#queryDiv').css('display','block');
@@ -389,6 +390,7 @@ require([
         }
         else {
             basinQuery.where = `Zone is not null`;
+            
             sceneLayerView.effect = {
                 filter: basinQuery,
                 excludedEffect: "opacity(40%) blur(1.5px) brightness(0.8)",
@@ -1012,7 +1014,7 @@ require([
                 "2040"
             ],
             datasets: [{
-                value: "Total Sewer Usage",
+                value: "Total Wastewater Flow (gpd)",
                 backgroundColor: [
                     "#35de9a",
                     "#35de9a",
@@ -1029,7 +1031,7 @@ require([
             },
             title: {
                 display: true,
-                text: "Total Sewer Usage (gpd)"
+                text: "Total Wastewater Flow (gpd)"
             },
             tooltips: {
                 callbacks: {
@@ -1507,7 +1509,7 @@ require([
         sewerChart = new Chart(sewerCanvas.getContext("2d"), {
         type: "horizontalBar",
         data: {
-            labels: ["Sewer Service", "No Sewer Service"],
+            labels: ["Waterwater Service", "No Wastewater Service"],
             datasets: [{
             backgroundColor: [
                 "#35de9a",
@@ -1524,7 +1526,7 @@ require([
             },
             title: {
             display: true,
-            text: "Sewer (# Customers)"
+            text: "Wastewater (# Customers)"
             },
             tooltips: {
                 callbacks: {
@@ -1700,6 +1702,10 @@ require([
         if (e.keyCode == 189 || e.keyCode == 109 || e.keyCode == 187) {
             e.preventDefault();
         }
+    })
+
+    $("#helpIcon").click(function(){
+        $("#helpWindow").show();
     })
    
 
