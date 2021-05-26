@@ -11,9 +11,12 @@ require([
     "esri/renderers/UniqueValueRenderer",
     "esri/renderers/ClassBreaksRenderer",
     "esri/widgets/BasemapToggle",
+    "esri/widgets/Search",
+    "esri/widgets/Zoom", 
+    "esri/tasks/Locator"
     
     ], function (esriConfig, WebMap, MapView, FeatureLayer, SketchViewModel, GraphicsLayer, Expand, Legend,
-    promiseUtils, UniqueValueRenderer, ClassBreaksRenderer, BasemapToggle) {
+    promiseUtils, UniqueValueRenderer, ClassBreaksRenderer, BasemapToggle, Search, Zoom, Locator) {
     const landUses = ['A-1: Agricultural', 'RE: Residential Estates', 'R-1: Suburban Sudivision', 'RMF: Multi-Family', 'RPD: Planned Unit Development',
                       'MHP: Manufactured Housing Park', 'RC-1: Combined Subdivision', 'B-1: Business (Limited)', 'B-2: Business (General)', 'M-1: Light Industry', 'M-2: Heavy Industry',
                       'C-1: Conservation', 'DZ: Double Zoned', 'TZ: Town', 'UK: Unknown'];
@@ -36,9 +39,34 @@ require([
     
     const view = new MapView({
         container: "viewDiv",
-        map: map
+        map: map,
+        ui: {
+            components: ["attribution"]
+        }
     });
+    
+    var search = new Search({
+        sources: [{
+          locator: new Locator({ url: "https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer"}),
+          countryCode:"USA",
+          singleLineFieldName: "SingleLine",
+          name: "Custom Geocoding Service",
+          placeholder: "Address Lookup",
+          maxResults: 3,
+          maxSuggestions: 3,
+          suggestionsEnabled: true,
+          minSuggestCharacters: 3
+      }],
+        view: view,
+        includeDefaultSources: false
+      });
 
+
+    view.ui.add(search, "top-left");
+    var zoom = new Zoom({
+        view: view
+    });
+    view.ui.add(zoom, "top-left")
     $('#overallResultsChartDiv').hide()
     $('#basinResultsChartDiv').hide()
 
@@ -121,16 +149,115 @@ require([
 
         map.removeAll()
         sceneLayer = new FeatureLayer({
-        url: "https://services.arcgis.com/t6fsA0jUdL7JkKG2/arcgis/rest/services/sewerWaterDevelopment/FeatureServer/0",
-        outFields: ['waterUsage','sewerLoad','waterUser','sewerUser','sewerAndWater','waterFactor_2025','waterFactor_2030','waterFactor_2040',
-                    'sewerFactor_2025','sewerFactor_2030','sewerFactor_2040','zone',
-                    'landUse_2025','landUse_2030','landUse_2040',
-                    'pDeveloped_2025','pDeveloped_2030','pDeveloped_2040',
-                    'waterDemand_2025','waterDemand_2030','waterDemand_2040',
-                    'sewerLoad_2025','sewerLoad_2030','sewerLoad_2040','psBasin','area'], popupTemplate: {
-            "title": "Attributes",
-            "content":"<b>Pump Station Basin: </b>{psBasin}<br><b>Water Flow Factor 2025: </b>{waterFactor_2025}<br><b>Water Flow Factor 2030: </b>{waterFactor_2030}<br><b>Water Flow Factor 2040: </b>{waterFactor_2040}<br><b>Sewer Flow Factor 2025: </b>{sewerFactor_2025}<br><b>Sewer Flow Factor 2030: </b>{sewerFactor_2030}<br><b>Sewer Flow Factor 2040: </b>{sewerFactor_2040}<br><b>Zoning 2020: </b>{zone}<br><b>Zoning 2025: </b>{landUse_2025}<br><b>Zoning 2030: </b>{landUse_2030}<br><b>Zoning 2040: </b>{landUse_2040}<br><b>% Developed 2025: </b>{pDeveloped_2025}<br><b>% Developed 2030: </b>{pDeveloped_2030}<br><b>% Developed 2040: </b>{pDeveloped_2040}</br><b>Water Demand 2025: </b>{waterDemand_2025}</br><b>Water Demand 2030: </b>{waterDemand_2030}</br><b>Water Demand 2040: </b>{waterDemand_2040}</br><b>Sewer Load 2025: </b>{sewerLoad_2025}</br><b>Sewer Load 2030: </b>{sewerLoad_2030}</br><b>Sewer Load 2040: </b>{sewerLoad_2040}"
-        }});
+            url: "https://services.arcgis.com/t6fsA0jUdL7JkKG2/arcgis/rest/services/sewerWaterDevelopment/FeatureServer/0",
+            outFields: ['waterUsage','sewerLoad','waterUser','sewerUser','sewerAndWater','waterFactor_2025','waterFactor_2030','waterFactor_2040',
+                        'sewerFactor_2025','sewerFactor_2030','sewerFactor_2040','zone',
+                        'landUse_2025','landUse_2030','landUse_2040',
+                        'pDeveloped_2025','pDeveloped_2030','pDeveloped_2040',
+                        'waterDemand_2025','waterDemand_2030','waterDemand_2040',
+                        'sewerLoad_2025','sewerLoad_2030','sewerLoad_2040','psBasin','area'], 
+            popupTemplate: {
+                title: "Attributes",
+                content: [{
+                    type: "fields",
+                    fieldInfos:[{
+                        fieldName:"psBasin",
+                        label: "Pump Station Basin",
+                    },{    
+                        fieldName:"waterDemand_2025",
+                        label: "2025 Water Usage (gpd)",
+                        format: {
+                            digitSeparator: true
+                        }
+                    },{
+                        fieldName:"waterDemand_2030",
+                        label: "2030 Water Usage (gpd)",
+                        format: {
+                            digitSeparator: true
+                        }
+                    },{
+                        fieldName:"waterDemand_2040",
+                        label: "2040 Water Usage (gpd)",
+                        format: {
+                            digitSeparator: true
+                        }
+                    },{
+                        fieldName:"sewerLoad_2025",
+                        label: "2025 Wastewater Flow (gpd)",
+                        format: {
+                            digitSeparator: true
+                        }
+                    },{
+                        fieldName:"sewerLoad_2030",
+                        label: "2030 Wastewater Flow (gpd)",
+                        format: {
+                            digitSeparator: true
+                        }
+                    },{
+                        fieldName:"sewerLoad_2040",
+                        label: "2040 Wastewater Flow (gpd)",
+                        format: {
+                            digitSeparator:true
+                        }
+                    },{
+                        fieldName:"waterFactor_2025",
+                        label: "2025 Water Flow Factor",
+                        format: {
+                            digitSeparator:true
+                        }
+                    },{
+                        fieldName:"waterFactor_2030",
+                        label: "2030 Water Flow Factor",
+                        format: {
+                            digitSeparator:true
+                        }
+                    },{
+                        fieldName:"waterFactor_2040",
+                        label: "2040 Water Flow Factor",
+                        format: {
+                            digitSeparator:true
+                        }
+                    },{
+                        fieldName:"sewerFactor_2025",
+                        label: "2025 Wastewater Flow Factor",
+                        format: {
+                            digitSeparator:true
+                        }
+                    },{
+                        fieldName:"sewerFactor_2030",
+                        label: "2030 Wastewater Flow Factor",
+                        format: {
+                            digitSeparator:true
+                        }
+                    },{
+                        fieldName:"sewerFactor_2040",
+                        label: "2040 Wastewater Flow Factor",
+                        format: {
+                            digitSeparator:true
+                        }
+                    },{
+                        fieldName:"landUse_2025",
+                        label: "2025 Zoning",
+                    },{
+                        fieldName:"landUse_2030",
+                        label: "2030 Zoning",
+                    },{
+                        fieldName:"landUse_2040",
+                        label: "2040 Zoning",
+                    },{
+                        fieldName:"pDeveloped_2025",
+                        label: "% Developed 2025"
+                    },{
+                        fieldName:"pDeveloped_2030",
+                        label: "% Developed 2030"
+                    },{
+                        fieldName:"pDeveloped_2040",
+                        label: "% Developed 2040"
+                    }
+                ]}],
+            }
+        });
+        
         map.add(sceneLayer);
         sceneLayer.renderer = zoningRenderer
         $('#zoningRadio').prop('checked',true)
@@ -831,9 +958,31 @@ require([
             },
             title: {
                 display: true,
-                text: "Total Water Usage"
+                text: "Total Water Usage (gpd)"
             },
-            
+            tooltips: {
+                callbacks: {
+                      label: function(tooltipItem, data) {
+                          var value = data.datasets[0].data[tooltipItem.index];
+                          if(parseInt(value) >= 1000){
+                                     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " gpd";
+                                  } else {
+                                     return value + " gpd";
+                                  }
+                      }
+                }
+            },  
+            plugins: {
+                datalabels: {
+                    formatter: function(value, context) {
+                        if(parseInt(value) >= 1000){
+                            return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                         } else {
+                            return value;
+                         }
+                    },              
+                }
+            },
             scales: {
             yAxes: [{
             ticks: {
@@ -865,10 +1014,10 @@ require([
             datasets: [{
                 value: "Total Sewer Usage",
                 backgroundColor: [
-                    "#2ed9e8",
-                    "#2ed9e8",
-                    "#2ed9e8",
-                    "#2ed9e8",
+                    "#35de9a",
+                    "#35de9a",
+                    "#35de9a",
+                    "#35de9a",
                 ],
                 data: [0,0,0,0]
             }]
@@ -880,9 +1029,31 @@ require([
             },
             title: {
                 display: true,
-                text: "Total Sewer Usage"
+                text: "Total Sewer Usage (gpd)"
             },
-            
+            tooltips: {
+                callbacks: {
+                      label: function(tooltipItem, data) {
+                          var value = data.datasets[0].data[tooltipItem.index];
+                          if(parseInt(value) >= 1000){
+                                     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " gpd";
+                                  } else {
+                                     return value + " gpd";
+                                  }
+                      }
+                }
+            },  
+            plugins: {
+                datalabels: {
+                    formatter: function(value, context) {
+                        if(parseInt(value) >= 1000){
+                            return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                         } else {
+                            return value;
+                         }
+                    },              
+                }
+            },
             scales: {
             yAxes: [{
             ticks: {
@@ -929,9 +1100,31 @@ require([
             },
             title: {
                 display: true,
-                text: "Total Water Usage"
+                text: "Total Water Usage (gpd)"
             },
-            
+            tooltips: {
+                callbacks: {
+                      label: function(tooltipItem, data) {
+                          var value = data.datasets[0].data[tooltipItem.index];
+                          if(parseInt(value) >= 1000){
+                                     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " gpd";
+                                  } else {
+                                     return value + " gpd";
+                                  }
+                      }
+                }
+            },  
+            plugins: {
+                datalabels: {
+                    formatter: function(value, context) {
+                        if(parseInt(value) >= 1000){
+                            return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                         } else {
+                            return value;
+                         }
+                    },              
+                }
+            },
             scales: {
             yAxes: [{
             ticks: {
@@ -978,9 +1171,31 @@ require([
             },
             title: {
                 display: true,
-                text: "Total Sewer Load"
+                text: "Total Wastewater Flow (gpd)"
             },
-            
+            tooltips: {
+                callbacks: {
+                      label: function(tooltipItem, data) {
+                          var value = data.datasets[0].data[tooltipItem.index];
+                          if(parseInt(value) >= 1000){
+                                     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " gpd";
+                                  } else {
+                                     return value + " gpd";
+                                  }
+                      }
+                }
+            },  
+            plugins: {
+                datalabels: {
+                    formatter: function(value, context) {
+                        if(parseInt(value) >= 1000){
+                            return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                         } else {
+                            return value;
+                         }
+                    },              
+                }
+            },
             scales: {
             yAxes: [{
             ticks: {
@@ -1027,9 +1242,31 @@ require([
             },
             title: {
                 display: true,
-                text: "Total Water Usage"
+                text: "Total Water Usage (gpd)"
             },
-            
+            tooltips: {
+                callbacks: {
+                      label: function(tooltipItem, data) {
+                          var value = data.datasets[0].data[tooltipItem.index];
+                          if(parseInt(value) >= 1000){
+                                     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " gpd";
+                                  } else {
+                                     return value + " gpd";
+                                  }
+                      }
+                }
+            },  
+            plugins: {
+                datalabels: {
+                    formatter: function(value, context) {
+                        if(parseInt(value) >= 1000){
+                            return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                         } else {
+                            return value;
+                         }
+                    },              
+                }
+            },
             scales: {
             yAxes: [{
             ticks: {
@@ -1059,7 +1296,7 @@ require([
                 "2040"
             ],
             datasets: [{
-                value: "Total Water Usage",
+                value: "Total Wastewater Flow",
                 backgroundColor: [
                     "#35de9a",
                     "#35de9a",
@@ -1076,9 +1313,31 @@ require([
             },
             title: {
                 display: true,
-                text: "Total Sewer Load"
+                text: "Total Wastewater Flow (gpd)"
             },
-            
+            tooltips: {
+                callbacks: {
+                      label: function(tooltipItem, data) {
+                          var value = data.datasets[0].data[tooltipItem.index];
+                          if(parseInt(value) >= 1000){
+                                     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " gpd";
+                                  } else {
+                                     return value + " gpd";
+                                  }
+                      }
+                }
+            },  
+            plugins: {
+                datalabels: {
+                    formatter: function(value, context) {
+                        if(parseInt(value) >= 1000){
+                            return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                         } else {
+                            return value;
+                         }
+                    },              
+                }
+            },
             scales: {
             yAxes: [{
             ticks: {
@@ -1116,7 +1375,10 @@ require([
             ],
             datasets: [{
             value: "Water (# Customers)",
-            backgroundColor: "#149dcf",
+            backgroundColor: [
+                "#2ed9e8",
+                "#abc5c7"
+            ],
             stack: "Stack 0",
             data: [0, 0]
             }]
@@ -1130,6 +1392,29 @@ require([
             display: true,
             text: "Water (# Customers)"
             },
+            tooltips: {
+                callbacks: {
+                      label: function(tooltipItem, data) {
+                          var value = data.datasets[0].data[tooltipItem.index];
+                          if(parseInt(value) >= 1000){
+                                     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                                  } else {
+                                     return value;
+                                  }
+                      }
+                }
+            },  
+            plugins: {
+                datalabels: {
+                    formatter: function(value, context) {
+                        if(parseInt(value) >= 1000){
+                            return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                         } else {
+                            return value;
+                         }
+                    },              
+                }
+            },
             scales: {
             xAxes: [{
                 stacked: true,
@@ -1139,7 +1424,10 @@ require([
                 }
             }],
             yAxes: [{
-                stacked: false
+                stacked: false,
+                ticks: {
+                    display: false
+                }
             }]
             }
         }
@@ -1148,66 +1436,82 @@ require([
     
     function createWaterUsageChart() {
     
-    const waterUsageCanvas = document.getElementById('water-usage-chart'); 
-    waterUsageChart = new Chart(waterUsageCanvas.getContext("2d"), {
-        type: "horizontalBar",
-        data: {
-        labels: [
-            "Total Water Usage"
-        ],
-        datasets: [{
-            value: "Total Water Usage in Selection",
-            backgroundColor: "#149dcf",
-            data: [0]
-        }]
-        },
-        options: {
-        responsive: false,
-        legend: {
-            display: false
-        },
-        title: {
-            display: true,
-            text: "Total Water Usage in Selection"
-        },
-        tooltips: {
-        callbacks: {
-                label: function(tooltipItem, data) {
-                    var value = data.datasets[0].data[tooltipItem.index];
-                    if(parseInt(value) >= 1000){
-                                return Math.round(value).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        const waterUsageCanvas = document.getElementById('water-usage-chart'); 
+        waterUsageChart = new Chart(waterUsageCanvas.getContext("2d"), {
+            type: "horizontalBar",
+            data: {
+                labels: ["Total Water Usage (gpd)"],
+                datasets: [{
+                    value: "Total Water Usage in Selection",
+                    backgroundColor: "#2ed9e8",
+                    data: [0]
+                }]
+            },
+            options: {
+                responsive: false,
+                legend: {
+                    display: false
+                },
+                title: {
+                    display: true,
+                    text: "Total Water Usage in Selection (gpd)"
+                },
+                tooltips: {
+                    callbacks: {
+                        label: function(tooltipItem, data) {
+                            var value = data.datasets[0].data[tooltipItem.index];
+                            if(parseInt(value) >= 1000){
+                                        return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " gpd";
+                                    } else {
+                                        return value + " gpd";
+                                    }
+                        }
+                    }
+                },  
+                plugins: {
+                    datalabels: {
+                        formatter: function(value, context) {
+                            if(parseInt(value) >= 1000){
+                                return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
                             } else {
                                 return value;
                             }
+                        },              
+                    }
+                },
+                scales: {
+                    xAxes: [{
+                        ticks: {
+                            beginAtZero: true,
+                            callback: function(value, index, values) {
+                            if(parseInt(value) >= 1000){
+                                return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                            } else {
+                                return value;
+                            }
+                            }
+                        }
+                    }],
+                    yAxes: [{
+                        ticks: {
+                            display: false
+                        }
+                    }]
                 }
-        } // end callbacks:
-        },
-        scales: {
-        xAxes: [{
-        ticks: {
-            beginAtZero: true,
-            callback: function(value, index, values) {
-            if(parseInt(value) >= 1000){
-                return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-            } else {
-                return value;
             }
-            }
-        }
-        }]
-    }
-    }});};
+        });
+    };
     
     function createSewerChart() {
         const sewerCanvas = document.getElementById('sewer-chart');
         sewerChart = new Chart(sewerCanvas.getContext("2d"), {
-        type: "doughnut",
+        type: "horizontalBar",
         data: {
-            labels: ["Sewer", "No Sewer"],
+            labels: ["Sewer Service", "No Sewer Service"],
             datasets: [{
             backgroundColor: [
-                "#FD7F6F",
-                "#7EB0D5",
+                "#35de9a",
+                "#abc7b6",
             ],
             borderWidth: 0,
             data: [0, 0]
@@ -1215,13 +1519,54 @@ require([
         },
         options: {
             responsive: false,
-            cutoutPercentage: 35,
             legend: {
-            position: "bottom"
+                display: false
             },
             title: {
             display: true,
             text: "Sewer (# Customers)"
+            },
+            tooltips: {
+                callbacks: {
+                    label: function(tooltipItem, data) {
+                        var value = data.datasets[0].data[tooltipItem.index];
+                        if(parseInt(value) >= 1000){
+                                    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                                } else {
+                                    return value;
+                                }
+                    }
+                }
+            },  
+            plugins: {
+                datalabels: {
+                    formatter: function(value, context) {
+                        if(parseInt(value) >= 1000){
+                            return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                        } else {
+                            return value;
+                        }
+                    },              
+                }
+            },
+            scales: {
+                xAxes: [{
+                    ticks: {
+                        beginAtZero: true,
+                        callback: function(value, index, values) {
+                        if(parseInt(value) >= 1000){
+                            return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                        } else {
+                            return value;
+                        }
+                        }
+                    }
+                }],
+                yAxes: [{
+                    ticks: {
+                        display: false
+                    }
+                }]
             }
         }
         });
