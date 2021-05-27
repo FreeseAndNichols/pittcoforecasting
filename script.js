@@ -336,7 +336,6 @@ require([
     $("#district").bind('change', function(){
         const selectedDistrict = $("#district option:selected").val();
         const selectedZoning = $("#landUse option:selected").val();
-        console.log(selectedDistrict, selectedZoning);
         const districtQuery = sceneLayer.createQuery();
         if (selectedDistrict != 'All Districts') {
             districtQuery.where = `Districts = '${selectedDistrict}'`;
@@ -385,7 +384,14 @@ require([
             $("#sewerFactor_2025").val(df['sewer2025'].mode()[0]);
             $("#sewerFactor_2030").val(df['sewer2030'].mode()[0]);
             $("#sewerFactor_2040").val(df['sewer2040'].mode()[0]);
-        });
+        }).catch(function(){
+            $("#waterFactor_2025").val('');
+            $("#waterFactor_2030").val('');
+            $("#waterFactor_2040").val('');
+            $("#sewerFactor_2025").val('');
+            $("#sewerFactor_2030").val('');
+            $("#sewerFactor_2040").val('');
+        })
     });
 
     $("#districtResult").bind('change', function(){
@@ -644,7 +650,6 @@ require([
     };
     
     $('#startForecast').bind('click', flowFactorSessionBegin).bind('click',function(){$('.ffInput').val('')});
-    $('#overallResults').bind('click', function(){console.log('overall results')});
     
     function zoningLandUseSessionBegin() {
         $('#editArea').css('display','none');
@@ -660,7 +665,6 @@ require([
     };
 
     $('#developmentForecast').bind('click', zoningLandUseSessionBegin).bind('click',function(){$('.luInput').val('')});
-    $('#basinResults').bind('click',function(){console.log('metershed results')});
 
     // Clear the geometry and set the default renderer
     function clearGeometry() {
@@ -729,7 +733,6 @@ require([
     function updateSceneLayer() {
         const query = sceneLayerView.createQuery();
         query.geometry = sketchGeometry;
-        // console.log(sceneLayerView.queryObjectIds(query).then(function(objectIds){console.log(objectIds)}))
         return sceneLayerView
         .queryObjectIds(query)
         .then(highlightBuildings);
@@ -738,7 +741,6 @@ require([
     function test() {
     const query = sceneLayerView.createQuery();
     query.geometry = sketchGeometry;
-    console.log(sceneLayerView)
     sceneLayerView.queryFeatures(query).then(function (results) {
         console.log(results)
         results.features.length > 0 ? $('#developmentForecast, #basinResults').removeClass('disabled') : $('#developmentForecast, #basinResults').addClass('disabled');
@@ -1734,14 +1736,12 @@ require([
         $("#helpIcon").click(function(){
             $("#resultDiv, #editArea, #devProjectionsArea, #overallResultsChartDiv, #basinResultsChartDiv").hide();
             if( $("#helpWindow").hasClass( "offScreen" ) ) {
-                console.log('moving on-screen')
                 $("#helpWindow").removeClass( "offScreen" );
                 $("#helpWindow").animate({
                     right:0
                 }, 700);
             }
             else {
-                console.log('hidden')
                 $("#helpWindow").animate({
                     right: "-26%"
                 }, 700);
