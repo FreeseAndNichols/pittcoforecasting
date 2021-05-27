@@ -69,7 +69,6 @@ require([
     view.ui.add(zoom, "top-left")
     $('#overallResultsChartDiv').hide()
     $('#basinResultsChartDiv').hide()
-    $('#helpWindow').hide()
 
     view.map.add(sketchLayer);
     $('#queryDiv').css('display','block');
@@ -385,8 +384,8 @@ require([
             basinQuery.where = `psBasin = '${selectedBasin}'`;
             sceneLayerView.effect = {
                 filter: basinQuery,
-                excludedEffect: "opacity(40%) blur(1.5px) brightness(0.8)",
-                includedEffect: "brightness(1.2)"};
+                excludedEffect: "opacity(40%) blur(1.5px) brightness(0.1)",
+                includedEffect: "brightness(1.1)"};
         }
         else {
             basinQuery.where = `Zone is not null`;
@@ -1704,10 +1703,38 @@ require([
         }
     })
 
-    $("#helpIcon").click(function(){
-        $("#helpWindow").show();
-    })
    
+   
+    $(document).ready(function helpWindowManager(){
+        $("#helpIcon").click(function(){
+            if( $("#helpWindow").hasClass( "offScreen" ) ) {
+                console.log('moving on-screen')
+                $("#helpWindow").removeClass( "offScreen" );
+                $("#helpWindow").animate({
+                    right:0
+                }, 700);
+            }
+            else {
+                console.log('hidden')
+                $("#helpWindow").animate({
+                    right: "-26%"
+                }, 700);
+                $("#helpWindow").addClass( "offScreen");
+            }
+        })
+    });
+        
+    
+
+
+    // function helpWindowManager(){
+    //     var x = document.getElementById("helpWindow")
+    //     if (x.style.display === "none") {
+    //         x.style.display = "block"
+    //     } else {
+    //         x.style.display = "none";
+    //     }
+    // };
 
     });
     

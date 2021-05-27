@@ -448,13 +448,26 @@ input:checked + .slider .off
 }
 
 #helpWindow {
-  position: fixed;
-  right: 0;
+  padding: 8px;
+  position: absolute;
+  right: -26%;
   margin-top: 50px;
   height: 85%;
   width: 25%;
   background-color: white;
-  display: block;
   z-index: 0;
-  border-style: solid;
+  border: solid;
+  border-width: .1px;
+  border-color: rgb(184, 184, 184);
+}
+
+#helpHeader {
+  font-size: 24px;
+  font-family: "Avenir Next","Helvetica Neue","Helvetica","Arial,sans-s";
+}
+
+#helpParagraph {
+  font-size: 16px;
+  font-family: "Avenir Next","Helvetica Neue","Helvetica","Arial,sans-s";
+
 }
