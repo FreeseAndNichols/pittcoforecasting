@@ -1702,11 +1702,10 @@ require([
             e.preventDefault();
         }
     })
-
-   
    
     $(document).ready(function helpWindowManager(){
         $("#helpIcon").click(function(){
+            $("#resultDiv, #editArea, #devProjectionsArea, #overallResultsChartDiv, #basinResultsChartDiv").hide();
             if( $("#helpWindow").hasClass( "offScreen" ) ) {
                 console.log('moving on-screen')
                 $("#helpWindow").removeClass( "offScreen" );
@@ -1724,17 +1723,5 @@ require([
         })
     });
         
-    
-
-
-    // function helpWindowManager(){
-    //     var x = document.getElementById("helpWindow")
-    //     if (x.style.display === "none") {
-    //         x.style.display = "block"
-    //     } else {
-    //         x.style.display = "none";
-    //     }
-    // };
-
     });
     
