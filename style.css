@@ -450,7 +450,7 @@ input:checked + .slider .off
 #helpWindow {
   padding: 15px;
   position: absolute;
-  right: -31%;
+  right: -31.5%;
   margin-top: 50px;
   height: 85%;
   width: 30%;
