@@ -1735,6 +1735,7 @@ require([
     $(document).ready(function helpWindowManager(){
         $("#helpIcon").click(function(){
             $("#resultDiv, #editArea, #devProjectionsArea, #overallResultsChartDiv, #basinResultsChartDiv").hide();
+            clearGeometry();
             if( $("#helpWindow").hasClass( "offScreen" ) ) {
                 $("#helpWindow").removeClass( "offScreen" );
                 $("#helpWindow").animate({
@@ -1749,6 +1750,13 @@ require([
             }
         })
     });
+
+    $("#close-icon-help-window").click(function(){
+        $("#helpWindow").animate({
+            right: "-31.5%"
+        }, 700);
+        $("#helpWindow").addClass( "offScreen");
+    })
         
     });
     
