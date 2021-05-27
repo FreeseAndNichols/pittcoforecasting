@@ -355,10 +355,42 @@ require([
         };
     });
 
+    $("#landUse, #district").bind('change', function(){
+        const selectedZone = $("#landUse option:selected").val().split(':')[0];
+        const selectedDistrict = $("#district option:selected").val();
+        const zoneQuery = sceneLayer.createQuery();
+
+        if (selectedDistrict != "All Districts") {
+            zoneQuery.where = `Districts = '${selectedDistrict}' AND Zone ='${selectedZone}'`;
+        }
+        else {
+            zoneQuery.where = `Zone ='${selectedZone}'`
+        }
+
+        sceneLayerView.queryFeatures(zoneQuery).then(function(results){
+            const fieldVals = {'water2025':[],'water2030':[],'water2040':[],'sewer2025':[],'sewer2030':[],'sewer2040':[]};
+            results.features.forEach(function(result){
+                fieldVals['water2025'].push(result.attributes['waterFactor_2025']);
+                fieldVals['water2030'].push(result.attributes['waterFactor_2030']);
+                fieldVals['water2040'].push(result.attributes['waterFactor_2040']);
+                fieldVals['sewer2025'].push(result.attributes['sewerFactor_2025']);
+                fieldVals['sewer2030'].push(result.attributes['sewerFactor_2030']);
+                fieldVals['sewer2040'].push(result.attributes['sewerFactor_2040']);
+            });
+
+            df = new dfd.DataFrame(fieldVals);
+            $("#waterFactor_2025").val(df['water2025'].mode()[0]);
+            $("#waterFactor_2030").val(df['water2030'].mode()[0]);
+            $("#waterFactor_2040").val(df['water2040'].mode()[0]);
+            $("#sewerFactor_2025").val(df['sewer2025'].mode()[0]);
+            $("#sewerFactor_2030").val(df['sewer2030'].mode()[0]);
+            $("#sewerFactor_2040").val(df['sewer2040'].mode()[0]);
+        });
+    });
+
     $("#districtResult").bind('change', function(){
         const selectedDistrict = $("#districtResult option:selected").val();
         const selectedZoning = $("#landUse option:selected").val();
-        console.log(selectedDistrict, selectedZoning);
         const districtQuery = sceneLayer.createQuery();
         if (selectedDistrict != 'All Districts') {
             districtQuery.where = `Districts = '${selectedDistrict}'`;
@@ -404,7 +436,6 @@ require([
         $(".editArea-container").find('button, input, select').prop('disabled',true);
         const selectedDistrict = $("#district option:selected").val();
         const selectedZoning = $("#landUse option:selected").val().split(':')[0];
-        console.log(selectedDistrict, ': ', selectedZoning)
         const districtQuery = sceneLayer.createQuery();
         districtQuery.where = `Districts = '${selectedDistrict}' AND Zone ='${selectedZoning}'`;
         districtQuery.outFields = '*';
@@ -421,9 +452,7 @@ require([
                 k.forEach((fieldname, index) => {
                     flowFactorInput[fieldname] = v[index]
                 })
-        
-            console.log(flowFactorInput);
-            
+                
             ffByLandUse["waterFactor_2025"][selectedZoning] = parseInt(flowFactorInput["waterFactor_2025"])
             ffByLandUse["waterFactor_2030"][selectedZoning] = parseInt(flowFactorInput["waterFactor_2030"])
             ffByLandUse["waterFactor_2040"][selectedZoning] = parseInt(flowFactorInput["waterFactor_2040"])
@@ -497,8 +526,6 @@ require([
                 landUseInput[fieldname] = v[index]
             })
     
-        console.log(landUseInput);
-
         var i,j,temparray,chunk = 1000;
             for (i=0,j=results.features.length; i<j; i+=chunk) {
             temparray = results.features.slice(i,i+chunk);

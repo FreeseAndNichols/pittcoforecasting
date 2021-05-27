@@ -16,6 +16,7 @@
   <script type = "text/javascript" src="script.js"> </script>
   <script type = "text/javascript" src="renderers.js"></script>
   <script src="https://kit.fontawesome.com/b0b7b3c187.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/danfojs@0.2.4/lib/bundle.min.js"></script>
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.3/css/all.css" integrity="sha384-SZXxX4whJ79/gErwcOYf+zWLeJdY/qpuqC4cAa9rOGUstPomtqpuNWT9wdPEn2fk" crossorigin="anonymous">
 </head>
 
@@ -182,10 +183,10 @@
       <div class = "topRowContainer">
         <div class = "dropdownContainer">
           <select id = "district" class = "dropdown">
-            <option value="" selected disabled>District</option>
+            <option value="All Districts" selected disabled>District</option>
           </select> 
           <select id = "landUse" class = "dropdown">
-            Land Use
+            <option value = "" selected disabled>Land Use</option>
           </select>
         </div>
         <button id = "submitFf" class="button" style="margin-right: 50px;">Save Projections</button>
