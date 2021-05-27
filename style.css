@@ -448,17 +448,18 @@ input:checked + .slider .off
 }
 
 #helpWindow {
-  padding: 8px;
+  padding: 15px;
   position: absolute;
-  right: -26%;
+  right: -31%;
   margin-top: 50px;
   height: 85%;
-  width: 25%;
+  width: 30%;
   background-color: white;
   z-index: 0;
   border: solid;
   border-width: .1px;
   border-color: rgb(184, 184, 184);
+  overflow-y: scroll;
 }
 
 #helpHeader {
@@ -466,8 +467,18 @@ input:checked + .slider .off
   font-family: "Avenir Next","Helvetica Neue","Helvetica","Arial,sans-s";
 }
 
-#helpParagraph {
+#helpSubHeader {
+  font-size: 20px;
+  font-family: "Avenir Next","Helvetica Neue","Helvetica","Arial,sans-s";
+}
+
+#helpSubHeaderSecondary {
+  font-size: 18px;
+  font-family: "Avenir Next","Helvetica Neue","Helvetica","Arial,sans-s";
+}
+
+.helpParagraph {
   font-size: 16px;
   font-family: "Avenir Next","Helvetica Neue","Helvetica","Arial,sans-s";
-
+  line-height: 150%;
 }

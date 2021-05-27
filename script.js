@@ -1743,7 +1743,7 @@ require([
             }
             else {
                 $("#helpWindow").animate({
-                    right: "-26%"
+                    right: "-31%"
                 }, 700);
                 $("#helpWindow").addClass( "offScreen");
             }
