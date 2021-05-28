@@ -482,3 +482,14 @@ input:checked + .slider .off
   font-family: "Avenir Next","Helvetica Neue","Helvetica","Arial,sans-s";
   line-height: 150%;
 }
+
+.helpContainer {
+  width: 110px;
+  height: 50px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+ 
+  margin-right: 1%;
+}
