@@ -170,13 +170,13 @@
         </thead>
         <tbody>
           <tr>
-            <th>Water Flow Factor</th>
+            <th>Water Flow Factor (gpd/acre)</th>
             <td><input id="waterFactor_2025" type="number" min = 0 class = "ffInput"></td>
             <td><input id="waterFactor_2030" type="number" min = 0 class = "ffInput"></td>
             <td><input id="waterFactor_2040" type="number" min = 0 class = "ffInput"></td>
           </tr>
           <tr>
-            <th>Wastewater Flow Factor</th>
+            <th>Wastewater Flow Factor (gpd/acre)</th>
             <td><input id="sewerFactor_2025" type = "number" min = 0 class = "ffInput"></td>
             <td><input id="sewerFactor_2030" type = "number" min = 0 class = "ffInput"></td>
             <td><input id="sewerFactor_2040" type = "number" min = 0 class = "ffInput"></td>
@@ -200,7 +200,7 @@
     <div class = "iconContainer">
       <i id = "close-icon-luinput" class="far fa-window-close fa-2x"></i>
     </div>
-      <div class="input-area-container">
+    <div class="input-area-container">
       <table class = 'table' id = 'luTable'>
         <col style="width:150px">
         <col style="width:20px">
@@ -227,8 +227,39 @@
             <td><input id = "pDeveloped_2030" type = "number" min = 0 max = 100 class = "luInput"></td>
             <td><input id = "pDeveloped_2040" type = "number" min = 0 max = 100 class = "luInput"></td>
           </tr>
-          </tbody>
+        </tbody>
       </table>
+      <br>
+      <table class = 'table' id = 'devFlowTable'>
+        <col style="width:150px">
+        <col style="width:20px">
+        <col style="width:20px">
+        <col style="width:20px">
+        
+        <thead>
+          <tr>
+            <th></th>
+            <th>2025</th>
+            <th>2030</th>
+            <th>2040</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th>Water Usage (gpd)</th>
+            <td><input id = "manualWaterUsage_2025" type = "number" min = 0 class = "luInput" ></td>
+            <td><input id = "manualWaterUsage_2030" type = "number" min = 0 class = "luInput"></td>
+            <td><input id = "manualWaterUsage_2040" type = "number" min = 0 class = "luInput"></td>
+          </tr>
+          <tr>
+            <th>Wastewater Flow (gpd)</th>
+            <td><input id = "manualSewerUsage_2025" type = "number" min = 0 class = "luInput" ></td>
+            <td><input id = "manualSewerUsage_2030" type = "number" min = 0 class = "luInput"></td>
+            <td><input id = "manualSewerUsage_2040" type = "number" min = 0 class = "luInput"></td>
+          </tr>
+        </tbody>
+      </table>
+     
       <div class = "topRowContainer">
         <div class = "dropdownContainer">
           <b class = "otherText" style = 'font-size: 14px;'>Utility Connection Year</b>
@@ -239,9 +270,18 @@
             <option value="2040">2040</option>
           </select>
         </div>
-          <button id = "submitLu" class="button" style="margin-right: 50px;">Save Projections</button>
+        <button id = "submitLu" class="button" style="margin-right: 50px;">Save Projections</button>
       </div>
-    </div>
+      <div class = "topRowContainer helpParagraph" style = "text-align: left; border-style: dashed; width: inherit; flex-direction: column; word-wrap: break-word;">
+        <b><u>NOTE</u></b>
+        If flows are manually updated, the flow values <br>
+        will be fixed and unaffected by future <br>
+        adjustments. <br><br>
+        If you wish to reset this field to it's default <br>
+        state, please click the button below. <br><br>
+        <button class = "button" id = "resetDefaults">Reset Defaults</button>
+      </div>
+    </div> 
   </div>
   <div class = "progressInfoWindow slideIn">
     <b class = "otherText" style="font-size: 20px;">
