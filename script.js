@@ -1400,8 +1400,8 @@ require([
         type: "horizontalBar",
         data: {
             labels: [
-            "Water Service",
-            "No Water Service",
+            "Service",
+            "No Service",
             ],
             datasets: [{
             value: "Water (# Customers)",
@@ -1456,7 +1456,7 @@ require([
             yAxes: [{
                 stacked: false,
                 ticks: {
-                    display: false
+                    display: true
                 }
             }]
             }
@@ -1537,7 +1537,7 @@ require([
         sewerChart = new Chart(sewerCanvas.getContext("2d"), {
         type: "horizontalBar",
         data: {
-            labels: ["Waterwater Service", "No Wastewater Service"],
+            labels: ["Service", "No Service"],
             datasets: [{
             backgroundColor: [
                 "#35de9a",
@@ -1594,7 +1594,7 @@ require([
                 }],
                 yAxes: [{
                     ticks: {
-                        display: false
+                        display: true
                     }
                 }]
             }
