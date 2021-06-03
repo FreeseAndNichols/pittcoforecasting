@@ -987,15 +987,15 @@ require([
             outStatisticFieldName: "waterDemand_2020",
             statisticType: "sum"
         },{
-            onStatisticField: "CASE WHEN waterUser = '2025' THEN waterDemand_2025 ELSE 0 END",
+            onStatisticField: "CASE WHEN waterUser = '2025' or waterUser = '2020' THEN waterDemand_2025 ELSE 0 END",
             outStatisticFieldName: "waterDemand_2025",
             statisticType: "sum"
         },{
-            onStatisticField: "CASE WHEN waterUser = '2030' THEN waterDemand_2030 ELSE 0 END",
+            onStatisticField: "CASE WHEN waterUser = '2030' or waterUser = '2025' or waterUser = '2020' THEN waterDemand_2030 ELSE 0 END",
             outStatisticFieldName: "waterDemand_2030",
             statisticType: "sum"
         },{
-            onStatisticField: "CASE WHEN waterUser = '2040' THEN waterDemand_2040 ELSE 0 END",
+            onStatisticField: "CASE WHEN waterUser = '2040' or waterUser = '2030' or waterUser = '2025' or waterUser = '2020'THEN waterDemand_2040 ELSE 0 END",
             outStatisticFieldName: "waterDemand_2040",
             statisticType: "sum"
         },{
@@ -1003,15 +1003,15 @@ require([
             outStatisticFieldName: "sewerLoad_2020",
             statisticType: "sum"
         },{
-            onStatisticField: "CASE WHEN sewerUser = '2025' THEN sewerLoad_2025 ELSE 0 END",
+            onStatisticField: "CASE WHEN sewerUser = '2025' or sewerUser = '2020' THEN sewerLoad_2025 ELSE 0 END",
             outStatisticFieldName: "sewerLoad_2025",
             statisticType: "sum"
         },{
-            onStatisticField: "CASE WHEN sewerUser = '2030' THEN sewerLoad_2030 ELSE 0 END",
+            onStatisticField: "CASE WHEN sewerUser = '2030' or sewerUser = '2025' or sewerUser = '2020' THEN sewerLoad_2030 ELSE 0 END",
             outStatisticFieldName: "sewerLoad_2030",
             statisticType: "sum"
         },{
-            onStatisticField: "CASE WHEN sewerUser = '2040' THEN sewerLoad_2040 ELSE 0 END",
+            onStatisticField: "CASE WHEN sewerUser = '2040' or sewerUser = '2030' or sewerUser = '2025' or sewerUser = '2020'THEN sewerLoad_2040 ELSE 0 END",
             outStatisticFieldName: "sewerLoad_2040",
             statisticType: "sum"
         },
@@ -1038,15 +1038,15 @@ require([
             outStatisticFieldName: "waterDemand_2020",
             statisticType: "sum"
         },{
-            onStatisticField: "CASE WHEN waterUser = '2025' THEN waterDemand_2025 ELSE 0 END",
+            onStatisticField: "CASE WHEN waterUser = '2025' or waterUser = '2020' THEN waterDemand_2025 ELSE 0 END",
             outStatisticFieldName: "waterDemand_2025",
             statisticType: "sum"
         },{
-            onStatisticField: "CASE WHEN waterUser = '2030' THEN waterDemand_2030 ELSE 0 END",
+            onStatisticField: "CASE WHEN waterUser = '2030'  or waterUser = '2025' or waterUser ='2020' THEN waterDemand_2030 ELSE 0 END",
             outStatisticFieldName: "waterDemand_2030",
             statisticType: "sum"
         },{
-            onStatisticField: "CASE WHEN waterUser = '2040' THEN waterDemand_2040 ELSE 0 END",
+            onStatisticField: "CASE WHEN waterUser = '2040' or waterUser = '2030'  or waterUser = '2025' or waterUser ='2020'THEN waterDemand_2040 ELSE 0 END",
             outStatisticFieldName: "waterDemand_2040",
             statisticType: "sum"
         },{
@@ -1054,15 +1054,15 @@ require([
             outStatisticFieldName: "sewerLoad_2020",
             statisticType: "sum"
         },{
-            onStatisticField: "CASE WHEN sewerUser = '2025' THEN sewerLoad_2025 ELSE 0 END",
+            onStatisticField: "CASE WHEN sewerUser = '2025' or sewerUser = '2020' THEN sewerLoad_2025 ELSE 0 END",
             outStatisticFieldName: "sewerLoad_2025",
             statisticType: "sum"
         },{
-            onStatisticField: "CASE WHEN sewerUser = '2030' THEN sewerLoad_2030 ELSE 0 END",
+            onStatisticField: "CASE WHEN sewerUser = '2030' or sewerUser = '2025' or sewerUser = '2020' THEN sewerLoad_2030 ELSE 0 END",
             outStatisticFieldName: "sewerLoad_2030",
             statisticType: "sum"
         },{
-            onStatisticField: "CASE WHEN sewerUser = '2040' THEN sewerLoad_2040 ELSE 0 END",
+            onStatisticField: "CASE WHEN sewerUser = '2040' or sewerUser = '2030' or sewerUser = '2025' or sewerUser = '2020' THEN sewerLoad_2040 ELSE 0 END",
             outStatisticFieldName: "sewerLoad_2040",
             statisticType: "sum"
         },
