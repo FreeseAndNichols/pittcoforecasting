@@ -440,110 +440,126 @@ require([
     };
     
     $('#submitFf').bind('click',function(){
-        $(".progressInfoWindow").toggleClass('slideIn');
-        $("#queryDiv").find('button, checkbox').prop('disabled',true);
-        $(".editArea-container").find('button, input, select').prop('disabled',true);
-        const selectedDistrict = $("#district option:selected").val();
-        const selectedZoning = $("#landUse option:selected").val().split(':')[0];
-        const manuallyUpdated = "false"
-        const districtQuery = sceneLayer.createQuery();
-        districtQuery.where = `Districts = '${selectedDistrict}' AND Zone ='${selectedZoning}' AND manuallyUpdatedFlow = '${manuallyUpdated}'`;
-        districtQuery.outFields = '*';
-        sceneLayerView.queryFeatures(districtQuery).then(function(results){            
-            var inputs = $('.ffInput'),
-                k  = [].map.call(inputs, function( input ) {
-                    return input.id
-                });
-                v = [].map.call(inputs, function(input){
-                    return input.value
-                });
-        
-                const flowFactorInput = {}
-                k.forEach((fieldname, index) => {
-                    flowFactorInput[fieldname] = v[index]
-                })
+            if( $("#district option:selected").val() != "noSelection"  && $("#landUse option:selected").val() != "noSelection"){
+            $(".progressInfoWindow").toggleClass('slideIn');
+            $("#queryDiv").find('button, checkbox').prop('disabled',true);
+            $(".editArea-container").find('button, input, select').prop('disabled',true);
+            let runTotal = 0;
+            const selectedDistrict = $("#district option:selected").val();
+            const selectedZoning = $("#landUse option:selected").val().split(':')[0];
+            const manuallyUpdated = "false"
+            const districtQuery = sceneLayer.createQuery();
+            districtQuery.where = `Districts = '${selectedDistrict}' AND Zone ='${selectedZoning}' AND manuallyUpdatedFlow = '${manuallyUpdated}'`;
+            districtQuery.outFields = '*';
+            sceneLayerView.queryFeatures(districtQuery).then(function(results){            
+                var inputs = $('.ffInput'),
+                    k  = [].map.call(inputs, function( input ) {
+                        return input.id
+                    });
+                    v = [].map.call(inputs, function(input){
+                        return input.value
+                    });
             
-            ffByLandUse["waterFactor_2025"][selectedZoning] = parseInt(flowFactorInput["waterFactor_2025"])
-            ffByLandUse["waterFactor_2030"][selectedZoning] = parseInt(flowFactorInput["waterFactor_2030"])
-            ffByLandUse["waterFactor_2040"][selectedZoning] = parseInt(flowFactorInput["waterFactor_2040"])
-            ffByLandUse["sewerFactor_2025"][selectedZoning] = parseInt(flowFactorInput["sewerFactor_2025"])
-            ffByLandUse["sewerFactor_2030"][selectedZoning] = parseInt(flowFactorInput["sewerFactor_2030"])
-            ffByLandUse["sewerFactor_2040"][selectedZoning] = parseInt(flowFactorInput["sewerFactor_2040"])
+                    const flowFactorInput = {}
+                    k.forEach((fieldname, index) => {
+                        flowFactorInput[fieldname] = v[index]
+                    })
+                
+                ffByLandUse["waterFactor_2025"][selectedZoning] = parseInt(flowFactorInput["waterFactor_2025"])
+                ffByLandUse["waterFactor_2030"][selectedZoning] = parseInt(flowFactorInput["waterFactor_2030"])
+                ffByLandUse["waterFactor_2040"][selectedZoning] = parseInt(flowFactorInput["waterFactor_2040"])
+                ffByLandUse["sewerFactor_2025"][selectedZoning] = parseInt(flowFactorInput["sewerFactor_2025"])
+                ffByLandUse["sewerFactor_2030"][selectedZoning] = parseInt(flowFactorInput["sewerFactor_2030"])
+                ffByLandUse["sewerFactor_2040"][selectedZoning] = parseInt(flowFactorInput["sewerFactor_2040"])
 
-            var count = 0;
-            var chunk = 1000;
-            const totalIterations = Math.floor(results.features.length/chunk)
-            for (i=0,j=results.features.length; i<j; i+=chunk) {
-                temparray = results.features.slice(i,i+chunk);
-                var updateFeatures = temparray.map(function(feature,i){
-                    esriConfig.request.timeout = 300000;
-                    feature.geometry = null;
+                var count = 0;
+                var chunk = 1000;
+                const totalIterations = Math.floor(results.features.length/chunk)
+                for (i=0,j=results.features.length; i<j; i+=chunk) {
+                    temparray = results.features.slice(i,i+chunk);
+                    var updateFeatures = temparray.map(function(feature,i){
+                        esriConfig.request.timeout = 300000;
+                        feature.geometry = null;
 
-                    if (flowFactorInput["waterFactor_2025"] !== null && flowFactorInput["waterFactor_2025"] !== ''){
-                        feature.attributes["waterFactor_2025"] = flowFactorInput["waterFactor_2025"]
-                        feature.attributes["waterDemand_2025"] = Math.round(flowFactorInput["waterFactor_2025"] * feature.attributes["area"] * feature.attributes["pDeveloped_2030"]);
+                        if (flowFactorInput["waterFactor_2025"] !== null && flowFactorInput["waterFactor_2025"] !== ''){
+                            feature.attributes["waterFactor_2025"] = flowFactorInput["waterFactor_2025"]
+                            feature.attributes["waterDemand_2025"] = Math.round(flowFactorInput["waterFactor_2025"] * feature.attributes["area"] * feature.attributes["pDeveloped_2025"]);
 
-                    }
+                        }
 
-                    if (flowFactorInput["waterFactor_2030"] !== null && flowFactorInput["waterFactor_2030"] !== ''){
-                        feature.attributes["waterFactor_2030"] = flowFactorInput["waterFactor_2030"];
-                        feature.attributes["waterDemand_2030"] = Math.round(flowFactorInput["waterFactor_2030"] * feature.attributes["area"] * feature.attributes["pDeveloped_2025"]);
+                        if (flowFactorInput["waterFactor_2030"] !== null && flowFactorInput["waterFactor_2030"] !== ''){
+                            feature.attributes["waterFactor_2030"] = flowFactorInput["waterFactor_2030"];
+                            feature.attributes["waterDemand_2030"] = Math.round(flowFactorInput["waterFactor_2030"] * feature.attributes["area"] * feature.attributes["pDeveloped_2030"]);
 
-                    }
+                        }
 
-                    if (flowFactorInput["waterFactor_2040"] !== null && flowFactorInput["waterFactor_2040"] !== ''){
-                        feature.attributes["waterFactor_2040"] = flowFactorInput["waterFactor_2040"];
-                        feature.attributes["waterDemand_2040"] = Math.round(flowFactorInput["waterFactor_2040"] * feature.attributes["area"] * feature.attributes["pDeveloped_2040"]);
+                        if (flowFactorInput["waterFactor_2040"] !== null && flowFactorInput["waterFactor_2040"] !== ''){
+                            feature.attributes["waterFactor_2040"] = flowFactorInput["waterFactor_2040"];
+                            feature.attributes["waterDemand_2040"] = Math.round(flowFactorInput["waterFactor_2040"] * feature.attributes["area"] * feature.attributes["pDeveloped_2040"]);
 
-                    }
+                        }
 
-                    if (flowFactorInput["sewerFactor_2025"] !== null && flowFactorInput["sewerFactor_2025"] !== ''){
-                        feature.attributes["sewerFactor_2025"] = flowFactorInput["sewerFactor_2025"];
-                        feature.attributes["sewerLoad_2025"] =   Math.round(flowFactorInput["sewerFactor_2025"] * feature.attributes["area"] * feature.attributes["pDeveloped_2025"]);
+                        if (flowFactorInput["sewerFactor_2025"] !== null && flowFactorInput["sewerFactor_2025"] !== ''){
+                            feature.attributes["sewerFactor_2025"] = flowFactorInput["sewerFactor_2025"];
+                            feature.attributes["sewerLoad_2025"] =   Math.round(flowFactorInput["sewerFactor_2025"] * feature.attributes["area"] * feature.attributes["pDeveloped_2025"]);
 
-                    }
+                        }
 
-                    if (flowFactorInput["sewerFactor_2030"] !== null && flowFactorInput["sewerFactor_2030"] !== ''){
-                        feature.attributes["sewerFactor_2030"] = flowFactorInput["sewerFactor_2030"];
-                        feature.attributes["sewerLoad_2030"] =   Math.round(flowFactorInput["sewerFactor_2030"] * feature.attributes["area"] * feature.attributes["pDeveloped_2030"]);
+                        if (flowFactorInput["sewerFactor_2030"] !== null && flowFactorInput["sewerFactor_2030"] !== ''){
+                            feature.attributes["sewerFactor_2030"] = flowFactorInput["sewerFactor_2030"];
+                            feature.attributes["sewerLoad_2030"] =   Math.round(flowFactorInput["sewerFactor_2030"] * feature.attributes["area"] * feature.attributes["pDeveloped_2030"]);
 
-                    }
+                        }
 
-                    if (flowFactorInput["sewerFactor_2040"] !== null && flowFactorInput["sewerFactor_2040"] !== ''){
-                        feature.attributes["sewerFactor_2040"] = flowFactorInput["sewerFactor_2040"];
-                        feature.attributes["sewerLoad_2040"] =   Math.round(flowFactorInput["sewerFactor_2040"] * feature.attributes["area"] * feature.attributes["pDeveloped_2040"]);
+                        if (flowFactorInput["sewerFactor_2040"] !== null && flowFactorInput["sewerFactor_2040"] !== ''){
+                            feature.attributes["sewerFactor_2040"] = flowFactorInput["sewerFactor_2040"];
+                            feature.attributes["sewerLoad_2040"] =   Math.round(flowFactorInput["sewerFactor_2040"] * feature.attributes["area"] * feature.attributes["pDeveloped_2040"]);
 
-                    }
-   
-                    return feature
-                });
-                console.log(updateFeatures);
-                console.log(i,j);
-                sceneLayer.applyEdits({
-                    updateFeatures: updateFeatures
-                }).then(function(results){
-                    console.log("update results",results.updateFeatureResults.length);  
-                    count += 1
-                }).then(function(){  
-                    if (count == totalIterations + 1) {
-                        console.log('done!');
-                        $('.progressInfoWindow').toggleClass('slideIn');
-                        $('#editArea').css('display','none')
-                        $("#queryDiv").find('button, checkbox').prop('disabled',false);
-                        $(".editArea-container").find('button, input, select').prop('disabled',false);    
-                        sceneLayerView.effect = "none";
-                    };
-                }).catch(function(err){
-                    console.log(err)
-                });
-            };
-        });
+                        }
+
+                        else{
+                            null
+                        }
+    
+                        return feature
+                    });
+                    console.log(updateFeatures);
+                    console.log(i,j);
+                    sceneLayer.applyEdits({
+                        updateFeatures: updateFeatures
+                    }).then(function(results){
+                        console.log("update results",results.updateFeatureResults.length);  
+                        count += 1
+                    }).then(function(){  
+                        if (count == totalIterations + 1) {
+                            console.log('done!');
+                            $('.progressInfoWindow').toggleClass('slideIn');
+                            $('#editArea').css('display','none')
+                            $("#queryDiv").find('button, checkbox').prop('disabled',false);
+                            $(".editArea-container").find('button, input, select').prop('disabled',false);    
+                            sceneLayerView.effect = "none";
+                        };
+                    }).catch(function(err){
+                        console.log(err)
+                    });
+                };
+            });
+        }
+        else {
+            if( $("#district option:selected").val() == "noSelection"  && $("#landUse option:selected").val() != "noSelection"){
+                alert('No district selected. Please select a district option before proceeding.')
+            }
+            else if( $("#district option:selected").val() != "noSelection"  && $("#landUse option:selected").val() == "noSelection"){
+                alert('No land use selected. Please select a land use before proceeding.')
+            }
+        }
     });
     
     $('#submitLu').bind('click', function(){sceneLayerView.effect="none"}).bind('click', function(){
         $('.progressInfoWindow').toggleClass('slideIn');
         $("#queryDiv").find('button, checkbox').prop('disabled',true);
         $(".editArea-container").find('button, input, select').prop('disabled',true);
+        let runTotal = 0;
         const manuallyUpdated = "false"
         const query = sceneLayerView.createQuery();
         query.geometry = sketchGeometry;
@@ -575,13 +591,13 @@ require([
 
                 if (landUseInput["landUse_2025"] !== null && landUseInput["landUse_2025"] !== ''){
                     feature.attributes["landUse_2025"] = landUseInput["landUse_2025"];
-                    feature.attributes["waterDemand_2025"] = Math.round(feature.attributes["waterFactor_2025"] * feature.attributes["area"] * landUseInput["pDeveloped_2030"]);
+                    feature.attributes["waterDemand_2025"] = Math.round(feature.attributes["waterFactor_2025"] * feature.attributes["area"] * landUseInput["pDeveloped_2025"]);
                     feature.attributes["sewerLoad_2025"] =   Math.round(feature.attributes["sewerFactor_2025"] * feature.attributes["area"] * landUseInput["pDeveloped_2025"]);
                 };
 
                 if (landUseInput["landUse_2030"] !== null && landUseInput["landUse_2030"] !== ''){
                     feature.attributes["landUse_2030"] = landUseInput["landUse_2030"];
-                    feature.attributes["waterDemand_2030"] = Math.round(feature.attributes["waterFactor_2030"] * feature.attributes["area"] * landUseInput["pDeveloped_2025"]);
+                    feature.attributes["waterDemand_2030"] = Math.round(feature.attributes["waterFactor_2030"] * feature.attributes["area"] * landUseInput["pDeveloped_2030"]);
                     feature.attributes["sewerLoad_2030"] =   Math.round(feature.attributes["sewerFactor_2030"] * feature.attributes["area"] * landUseInput["pDeveloped_2030"]);
                 };
                 
@@ -614,7 +630,9 @@ require([
                         feature.attributes["manuallyUpdatedFlow"] = "true"
                     }
 
-                
+                else {
+                    null
+                }
                 return feature
             });
                 console.log(updateFeatures);
@@ -623,9 +641,9 @@ require([
                     updateFeatures: updateFeatures
                 }).then(function(results){
                     console.log("update results",results.updateFeatureResults.length);    
-                    
-                }).then(function(){
-                    if (j-i <= 1000){
+                    runTotal += results.updateFeatureResults.length;
+                    console.log(j, runTotal, j - runTotal)
+                    if (j- runTotal < 1){
                         $('.progressInfoWindow').toggleClass('slideIn');
                         $('#editArea').css('display','none')
                         $("#queryDiv").find('button, checkbox').prop('disabled',false);
@@ -644,6 +662,7 @@ require([
         $('.progressInfoWindow').toggleClass('slideIn');
         const query = sceneLayerView.createQuery();
         query.geometry = sketchGeometry;
+        let runTotal = 0;
         sceneLayerView.queryFeatures(query).then(function (results) {
             var i,j,temparray,chunk = 1000;
                 for (i=0,j=results.features.length; i<j; i+=chunk) {
@@ -651,8 +670,8 @@ require([
                 var updateFeatures = temparray.map(function(feature,i){
                     esriConfig.request.timeout = 300000;
                     feature.geometry = null;
-                    feature.attributes["waterDemand_2030"] = Math.round(feature.attributes["waterFactor_2030"] * feature.attributes["area"] * feature.attributes["pDeveloped_2025"]);
-                    feature.attributes["waterDemand_2025"] = Math.round(feature.attributes["waterFactor_2025"] * feature.attributes["area"] * feature.attributes["pDeveloped_2030"]);
+                    feature.attributes["waterDemand_2025"] = Math.round(feature.attributes["waterFactor_2025"] * feature.attributes["area"] * feature.attributes["pDeveloped_2025"]);
+                    feature.attributes["waterDemand_2030"] = Math.round(feature.attributes["waterFactor_2030"] * feature.attributes["area"] * feature.attributes["pDeveloped_2030"]);
                     feature.attributes["waterDemand_2040"] = Math.round(feature.attributes["waterFactor_2040"] * feature.attributes["area"] * feature.attributes["pDeveloped_2040"]);
                     feature.attributes["sewerLoad_2025"] =   Math.round(feature.attributes["sewerFactor_2025"] * feature.attributes["area"] * feature.attributes["pDeveloped_2025"]);
                     feature.attributes["sewerLoad_2030"] =   Math.round(feature.attributes["sewerFactor_2030"] * feature.attributes["area"] * feature.attributes["pDeveloped_2030"]);
@@ -666,9 +685,9 @@ require([
                     updateFeatures: updateFeatures
                 }).then(function(results){
                     console.log("update results",results.updateFeatureResults.length);    
-                    
-                }).then(function(){
-                    if (j-i <= 1000){
+                    runTotal += results.updateFeatureResults.length;
+                    console.log(j, runTotal, j - runTotal)
+                    if (j- runTotal < 1){
                         $('.progressInfoWindow').toggleClass('slideIn');
                         $('#editArea').css('display','none')
                         $("#queryDiv").find('button, checkbox').prop('disabled',false);
@@ -922,15 +941,15 @@ require([
             outStatisticFieldName: "waterDemand_2020",
             statisticType: "sum"
         },{
-            onStatisticField: "CASE WHEN waterUser = '2025' THEN waterDemand_2025 ELSE 0 END",
+            onStatisticField: "CASE WHEN waterUser = '2025' or waterUser = '2020' THEN waterDemand_2025 ELSE 0 END",
             outStatisticFieldName: "waterDemand_2025",
             statisticType: "sum"
         },{
-            onStatisticField: "CASE WHEN waterUser = '2030' THEN waterDemand_2030 ELSE 0 END",
+            onStatisticField: "CASE WHEN waterUser = '2030' or waterUser = '2025' or waterUser = '2020' THEN waterDemand_2030 ELSE 0 END",
             outStatisticFieldName: "waterDemand_2030",
             statisticType: "sum"
         },{
-            onStatisticField: "CASE WHEN waterUser = '2040' THEN waterDemand_2040 ELSE 0 END",
+            onStatisticField: "CASE WHEN waterUser = '2040' or waterUser = '2030' or waterUser = '2025' or waterUser = '2020' THEN waterDemand_2040 ELSE 0 END",
             outStatisticFieldName: "waterDemand_2040",
             statisticType: "sum"
         },{
@@ -938,15 +957,15 @@ require([
             outStatisticFieldName: "sewerLoad_2020",
             statisticType: "sum"
         },{
-            onStatisticField: "CASE WHEN sewerUser = '2025' THEN sewerLoad_2025 ELSE 0 END",
+            onStatisticField: "CASE WHEN sewerUser = '2025' or sewerUser = '2020' THEN sewerLoad_2025 ELSE 0 END",
             outStatisticFieldName: "sewerLoad_2025",
             statisticType: "sum"
         },{
-            onStatisticField: "CASE WHEN sewerUser = '2030' THEN sewerLoad_2030 ELSE 0 END",
+            onStatisticField: "CASE WHEN sewerUser = '2030' or sewerUser = '2025' or sewerUser = '2020' THEN sewerLoad_2030 ELSE 0 END",
             outStatisticFieldName: "sewerLoad_2030",
             statisticType: "sum"
         },{
-            onStatisticField: "CASE WHEN sewerUser = '2040' THEN sewerLoad_2040 ELSE 0 END",
+            onStatisticField: "CASE WHEN sewerUser = '2040' or sewerUser = '2030' or sewerUser = '2025' or sewerUser = '2020' THEN sewerLoad_2040 ELSE 0 END",
             outStatisticFieldName: "sewerLoad_2040",
             statisticType: "sum"
         },
