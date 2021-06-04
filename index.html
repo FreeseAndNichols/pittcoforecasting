@@ -16,12 +16,17 @@
   <script type = "text/javascript" src="script.js"> </script>
   <script type = "text/javascript" src="renderers.js"></script>
   <script src="https://kit.fontawesome.com/b0b7b3c187.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/danfojs@0.2.4/lib/bundle.min.js"></script>
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.3/css/all.css" integrity="sha384-SZXxX4whJ79/gErwcOYf+zWLeJdY/qpuqC4cAa9rOGUstPomtqpuNWT9wdPEn2fk" crossorigin="anonymous">
 </head>
 
 <body>
   <header class="header">
-    <div id="content" style="font-size: 32px; font-family: Arial; font-weight: 150;">Pittsylvania County Utilities Sandbox</div>
+    <div id="content" style="font-size: 32px; font-family: Arial; font-weight: 150;">Pittsylvania County Utilities Growth Forecasting Tool</div>
+    <div class = helpContainer>
+      <div style = "font-size: 18px; font-family: Arial, Helvetica, sans-serif">HELP</div>
+      <i id="helpIcon" class="fas fa-book fa-2x" style="margin-right: 20px;" title="Sandbox Guide"></i>
+    </div>
   </header>
   <div id="viewDiv"></div>
   <div id="queryDiv" class="esri-widget">
@@ -140,8 +145,8 @@
     <p>Please Select A Symbology Category:</p>
     <input id="zoningRadio" class = "radio" type="radio" name="renderer" value="ZONING" checked/> Zoning<br />
     <input id="waterRadio" class = "radio" type="radio" name="renderer" value="WATER" /> Water<br />
-    <input id="sewerRadio" class = "radio" type="radio" name="renderer" value="SEWER" /> Sewer<br />
-    <input id="utilsRadio" class = "radio" type="radio" name="renderer" value="UTILITIES" /> Water and Sewer<br />
+    <input id="sewerRadio" class = "radio" type="radio" name="renderer" value="SEWER" /> Wastewater<br />
+    <input id="utilsRadio" class = "radio" type="radio" name="renderer" value="UTILITIES" /> Combined Utilities<br />
   </div>
   <div id="basemapGalleryDiv"></div>
 
@@ -165,13 +170,13 @@
         </thead>
         <tbody>
           <tr>
-            <th>Water Flow Factor</th>
+            <th>Water Flow Factor (gpd/acre)</th>
             <td><input id="waterFactor_2025" type="number" min = 0 class = "ffInput"></td>
-            <td><input id="waterFactor_2030" type="number" min = 0 class = "ffInput" ></td>
-            <td><input id="waterFactor_2040" type="number" min = 0 class = "ffInput" ></td>
+            <td><input id="waterFactor_2030" type="number" min = 0 class = "ffInput"></td>
+            <td><input id="waterFactor_2040" type="number" min = 0 class = "ffInput"></td>
           </tr>
           <tr>
-            <th>Sewer Flow Factor</th>
+            <th>Wastewater Flow Factor (gpd/acre)</th>
             <td><input id="sewerFactor_2025" type = "number" min = 0 class = "ffInput"></td>
             <td><input id="sewerFactor_2030" type = "number" min = 0 class = "ffInput"></td>
             <td><input id="sewerFactor_2040" type = "number" min = 0 class = "ffInput"></td>
@@ -181,10 +186,10 @@
       <div class = "topRowContainer">
         <div class = "dropdownContainer">
           <select id = "district" class = "dropdown">
-            <option value="" selected disabled>District</option>
+            <option value="noSelection" selected disabled>District</option>
           </select> 
           <select id = "landUse" class = "dropdown">
-            Land Use
+            <option value = "noSelection" selected disabled>Land Use</option>
           </select>
         </div>
         <button id = "submitFf" class="button" style="margin-right: 50px;">Save Projections</button>
@@ -195,7 +200,7 @@
     <div class = "iconContainer">
       <i id = "close-icon-luinput" class="far fa-window-close fa-2x"></i>
     </div>
-      <div class="input-area-container">
+    <div class="input-area-container">
       <table class = 'table' id = 'luTable'>
         <col style="width:150px">
         <col style="width:20px">
@@ -218,12 +223,43 @@
           </tr>
           <tr>
             <th>% Developed</th>
-            <td><input id = "pDeveloped_2025" type = "number" min = 0 class = "luInput"></td>
-            <td><input id = "pDeveloped_2030" type = "number" min = 0 class = "luInput"></td>
-            <td><input id = "pDeveloped_2040" type = "number" min = 0 class = "luInput"></td>
+            <td><input id = "pDeveloped_2025" type = "number" min = 0 max = 100 class = "luInput" ></td>
+            <td><input id = "pDeveloped_2030" type = "number" min = 0 max = 100 class = "luInput"></td>
+            <td><input id = "pDeveloped_2040" type = "number" min = 0 max = 100 class = "luInput"></td>
           </tr>
-          </tbody>
+        </tbody>
       </table>
+      <br>
+      <table class = 'table' id = 'devFlowTable'>
+        <col style="width:150px">
+        <col style="width:20px">
+        <col style="width:20px">
+        <col style="width:20px">
+        
+        <thead>
+          <tr>
+            <th></th>
+            <th>2025</th>
+            <th>2030</th>
+            <th>2040</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th>Water Usage (gpd)</th>
+            <td><input id = "manualWaterUsage_2025" type = "number" min = 0 class = "luInput" ></td>
+            <td><input id = "manualWaterUsage_2030" type = "number" min = 0 class = "luInput"></td>
+            <td><input id = "manualWaterUsage_2040" type = "number" min = 0 class = "luInput"></td>
+          </tr>
+          <tr>
+            <th>Wastewater Flow (gpd)</th>
+            <td><input id = "manualSewerUsage_2025" type = "number" min = 0 class = "luInput" ></td>
+            <td><input id = "manualSewerUsage_2030" type = "number" min = 0 class = "luInput"></td>
+            <td><input id = "manualSewerUsage_2040" type = "number" min = 0 class = "luInput"></td>
+          </tr>
+        </tbody>
+      </table>
+     
       <div class = "topRowContainer">
         <div class = "dropdownContainer">
           <b class = "otherText" style = 'font-size: 14px;'>Utility Connection Year</b>
@@ -234,15 +270,85 @@
             <option value="2040">2040</option>
           </select>
         </div>
-          <button id = "submitLu" class="button" style="margin-right: 50px;">Save Projections</button>
+        <button id = "submitLu" class="button" style="margin-right: 50px;">Save Projections</button>
       </div>
-    </div>
+      <div class = "topRowContainer helpParagraph" style = "text-align: left; border-style: dashed; width: inherit; flex-direction: column; word-wrap: break-word;">
+        <b><u>NOTE</u></b>
+        If flows are manually updated, the flow values <br>
+        will be fixed and unaffected by future <br>
+        adjustments. <br><br>
+        If you wish to reset this field to it's default <br>
+        state, please click the button below. <br><br>
+        <button class = "button" id = "resetDefaults">Reset Defaults</button>
+      </div>
+    </div> 
   </div>
   <div class = "progressInfoWindow slideIn">
     <b class = "otherText" style="font-size: 20px;">
       Your edits are being applied. <br><br>
       All buttons will be disabled until processing is completed.<br> This window will close upon completion.
     </b>
+  </div>
+  <div id = "helpWindow" class = "offScreen">
+    <div class = "topRowContainer">
+      <header id="helpHeader">
+        Growth Forecasting Tool - Help Page
+      </header>
+      <i id = "close-icon-help-window" class="far fa-window-close fa-2x" style="margin-left: 10px; margin-top: 5px;"></i>
+    </div>
+    <p id = "helpSubHeader">General Visualization & Navigation: <hr></p>
+    <p class = "helpParagraph">
+      <b>1.</b> Zoom in/out of the map display using the mouse scroll wheel or the "+/-" buttons found on the left hand side of the window. <br><br>
+      <b>2.</b> Pan around to an area of interest by left-clicking and dragging before releasing.<br><br>
+      <b>3.</b> Toggle between available basemap backgrounds using the Basemap button found on the left hand side of the window.<br><br>
+      <b>4.</b> Display a legend for the active symbology using the Legend button found on the left hand side of the window.<br><br>
+      <b>5.</b> Search for an address, street, or city using the search bar in the top left corner of the window.<br><br>
+      <b>6.</b> Toggle between available map symbology using the Symbology button found on the left hand side of the window.<br>
+      <ul class="helpParagraph">
+        <li>"Zoning" displays parcels according to zoning classification.</li><br>
+        <li>"Water" highlights water customers and symbolizes the parcels according to average water demand and planning year</li><br>
+        <li>"Wastewater" highlights wastewater customers and symbolizes the parcels according to average wastewater flow and planning year</li><br>
+        <li>"Combined Water and Wastewater" symbolizes parcels connected to both utility systems by planning year</li><br>
+      </ul>
+    </p>
+    <p id = "helpSubHeader">Water Demand/Sewer Flow Forecasting:</p><hr>
+    <p class = "helpParagraph">Each parcel is preloaded with water and sewer flow estimates by planning year. Follow the steps below to view the projected results and/or to make revisions. </p>
+    <ol class = "helpParagraph">
+      <li>VIEW PROJECTIONS: </li>
+      <ul class = "helpParagraph">
+        <li>
+          <b>By User Selection:</b> Select either an individual parcel or an area of multiple parcels using the white buttons in the "Query by Geometry" box at the bottom left of the screen. 
+          After a selection is completed, water and wastewater projection results will automatically display in a pop-up along the right side of the screen.
+          Near the top of the pop-up window, a drop down box enables the user to toggle between "current results" and "projected results." 
+          To view results for a new parcel(s) selection, click the "Clear Selection" button in the "Query by Geometry" box, and then repeat the selection process for the new area.
+          <br></br><b>Note- A table of attribute data for any parcel may also be viewed by simply clicking the parcel in the map display.</b><br></br>
+        </li>
+        <li>
+          <b>By Pump Station Basin:</b> In the "Query by Geometry" box, toggle the gray slider bar to switch from "Project" to "Results." Next, select the "Lift Station Basin Results" button to open a pop-up window of water and wastewater flows.
+          Use the drop-down button at the top to select and display results for the pump station basin of interest.
+        </li>
+        <li>
+          <b>By District:</b> In the "Query by Geometry" box, toggle the gray slider bar to switch from "Project" to "Results." Next, select the "Overall Results" button to open a pop-up window of water and wastewater flows.
+          Use the drop-down button at the top to select and display results for the County district of interest.
+        </li>
+      </ul>
+      <br>
+      <li>MODIFY PROJECTIONS</li>
+      <ul>
+        <li>
+          <b>Modify Projection Information:</b> In the "Query by Geometry" box, toggle the slider bar to switch to "Project". Use the "Query by Individual Parcel" or "Query by Polygon" buttons to select the parcel(s) to edit.
+          Click the "Development Projections" button to open an editing pop-up window. In the pop-up window, use the drop-down boxes to modify land-use assumptions by planning year. 
+          Modify the percent developed assumptions for the active selection by entering the desired percentage (e.g. 75) by planning year. Use the drop down options to modify the "Utility Connection Year". 
+          Click "Save Projections" to active the revisions.
+        </li>
+        </br>
+        <li>
+          <b>Modify Flow Factors:</b> In the "Query by Geometry" box, toggle the slider bar to switch to "Project".Click the "Change Flow Factors" button to open an editing pop-up window.
+          Flow factors may be edited by zoning-classification within County districts. Use the drop-down boxes to select the district and zoning-classification to be modified. Note that the map display will highlight the selected district.
+          Revise the flow factor assumptions by entering the desired water and or sewer flow factors into the table by planning year. 
+          Click "Save Projections" to activate the revisions.
+        </li>
+    </ol>
   </div>
   </body>
 </html> 
