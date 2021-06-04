@@ -291,7 +291,10 @@ const waterRenderer = {
     },{
     value: "",
     symbol: noUtilities
-    }]
+    }],
+    legendOptions: {
+        title: "Water Service Activation Year"
+    }
 };
 
 const sewerRenderer = {
@@ -320,7 +323,10 @@ const sewerRenderer = {
     },{
     value: "",
     symbol: noUtilities
-    }]
+    }],
+    legendOptions: {
+        title: "Wastewater Service Activation Year"
+    }
 };
 
 
