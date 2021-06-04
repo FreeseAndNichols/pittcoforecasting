@@ -11,17 +11,16 @@ require([
     "esri/renderers/UniqueValueRenderer",
     "esri/renderers/ClassBreaksRenderer",
     "esri/widgets/BasemapToggle",
-    "esri/portal/PortalItem"
+    "esri/widgets/Search",
+    "esri/widgets/Zoom", 
+    "esri/tasks/Locator",
     
     ], function (esriConfig, WebMap, MapView, FeatureLayer, SketchViewModel, GraphicsLayer, Expand, Legend,
-    promiseUtils, UniqueValueRenderer, ClassBreaksRenderer, BasemapToggle, PortalItem) {
+    promiseUtils, UniqueValueRenderer, ClassBreaksRenderer, BasemapToggle, Search, Zoom, Locator) {
     const landUses = ['A-1: Agricultural', 'RE: Residential Estates', 'R-1: Suburban Sudivision', 'RMF: Multi-Family', 'RPD: Planned Unit Development',
                       'MHP: Manufactured Housing Park', 'RC-1: Combined Subdivision', 'B-1: Business (Limited)', 'B-2: Business (General)', 'M-1: Light Industry', 'M-2: Heavy Industry',
                       'C-1: Conservation', 'DZ: Double Zoned', 'TZ: Town', 'UK: Unknown'];
-    const basins = ['All Basins','Blairs (E-toys)','Brockway','Chatham Middle School','Cross Creek Subdivision','Deercrest Lane (C)','Gretna Industrial Park (GIS)',
-                    'Hodnetts Mill Rd','Inca Lane (VIR)','Mount Hermon (Laurel Woods)','Pine Lake Rd (B)','Ragsdale Rd (A)','Ringgold East Industrial Park',
-                    'Tightsqueeze (Times Fiber)','Witcher Rd'];
-    const sewersheds = ['Altavista','Chatham','Danville','Gretna'];
+    const basins = ['All Basins','a','b','c','d','e','f'];
     const districts = ["All Districts","Staunton River", "Callands-Gretna", "Chatham", "Blairs", "Tunstall", "Dan River", "Westover"];
     const ffByLandUse = {'waterFactor_2025':{'A-1':100,'B-1':100,'B-2':100,'C-1':100,'DZ':100,'M-1':100,'M-2':100,'MHP':100,'R-1':100,'RC-1':100,'RE':100,'RMF':100,'RPD':100,'TZ':100,'UK':100},
                          'waterFactor_2030':{'A-1':100,'B-1':100,'B-2':100,'C-1':100,'DZ':100,'M-1':100,'M-2':100,'MHP':100,'R-1':100,'RC-1':100,'RE':100,'RMF':100,'RPD':100,'TZ':100,'UK':100},
@@ -32,18 +31,42 @@ require([
 
     const sketchLayer = new GraphicsLayer();
     
-    esriConfig.portalUrl = "https://gisportal3.freese.com/portal/"
     const map = new WebMap({
         portalItem: {
-        id: "6769d67fcf2e4891b3896bc81722e2e6"
+        id: "71f618cdbf414cc19663b0fe5f2fef20"
         }
     });
     
     const view = new MapView({
         container: "viewDiv",
-        map: map
+        map: map,
+        ui: {
+            components: ["attribution"]
+        }
     });
+    
+    var search = new Search({
+        sources: [{
+          locator: new Locator({ url: "https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer"}),
+          countryCode:"USA",
+          singleLineFieldName: "SingleLine",
+          name: "Custom Geocoding Service",
+          placeholder: "Address Lookup",
+          maxResults: 3,
+          maxSuggestions: 3,
+          suggestionsEnabled: true,
+          minSuggestCharacters: 3
+      }],
+        view: view,
+        includeDefaultSources: false
+      });
 
+
+    view.ui.add(search, "top-left");
+    var zoom = new Zoom({
+        view: view
+    });
+    view.ui.add(zoom, "top-left")
     $('#overallResultsChartDiv').hide()
     $('#basinResultsChartDiv').hide()
 
@@ -86,6 +109,18 @@ require([
     };
     
     map.load().then(function () {
+        sceneLayer = map.allLayers.find(function (layer) {
+        if (layer.title === "sewer_water_landUse") {
+            map.add(layer)
+            return layer.title === "sewer_water_landUse"
+        }
+        });
+    
+        map.removeAll();
+        map.add(sceneLayer);
+        sceneLayer.outFields = ["*"];
+        sceneLayer.renderer = zoningRenderer
+
         $('#developmentForecast').addClass('disabled');
         $('#basinResults').addClass('disabled');
 
@@ -113,18 +148,119 @@ require([
         $('#devProjectionsArea').css('display','none');
 
         map.removeAll()
-
         sceneLayer = new FeatureLayer({
-        url: "https://fwgis-web3.freese.com/arcgis/rest/services/Hosted/SewerAndWater_Copy/FeatureServer/0",
-        outFields: ['waterUsage','sewerLoad','waterUser','sewerUser','sewerAndWater','waterFactor_2025','waterFactor_2030','waterFactor_2040',
-                    'sewerFactor_2025','sewerFactor_2030','sewerFactor_2040','zone',
-                    'landUse_2025','landUse_2030','landUse_2040',
-                    'pDeveloped_2025','pDeveloped_2030','pDeveloped_2040',
-                    'waterDemand_2025','waterDemand_2030','waterDemand_2040',
-                    'sewerLoad_2025','sewerLoad_2030','sewerLoad_2040','psBasin','area','Sewershed'], popupTemplate: {
-            "title": "Title",
-            "content":"<b>Zoning 2020: </b>{zone}<br><b>Water Flow Factor 2025: </b>{waterFactor_2025}<br><b>Water Flow Factor 2030: </b>{waterFactor_2030}<br><b>Water Flow Factor 2040: </b>{waterFactor_2040}<br><b>Sewer Flow Factor 2025: </b>{sewerFactor_2025}<br><b>Sewer Flow Factor 2030: </b>{sewerFactor_2030}<br><b>Sewer Flow Factor 2040: </b>{sewerFactor_2040}<br><b>Zoning 2025: </b>{landUse_2025}<br><b>Zoning 2030: </b>{landUse_2030}<br><b>Zoning 2040: </b>{landUse_2040}<br><b>% Developed 2025: </b>{pDeveloped_2025}<br><b>% Developed 2030: </b>{pDeveloped_2030}<br><b>% Developed 2040: </b>{pDeveloped_2040}</br><b>Water Demand 2025: </b>{waterDemand_2025}</br><b>Water Demand 2030: </b>{waterDemand_2030}</br><b>Water Demand 2040: </b>{waterDemand_2040}</br><b>Sewer Load 2025: </b>{sewerLoad_2025}</br><b>Sewer Load 2030: </b>{sewerLoad_2030}</br><b>Sewer Load 2040: </b>{sewerLoad_2040}</br><b>Pump Station Basin: </b>{psBasin}"
-        }});
+            url: "https://services.arcgis.com/t6fsA0jUdL7JkKG2/arcgis/rest/services/SewerWaterLanduse_Dev/FeatureServer",
+            outFields: ['waterUsage','sewerLoad','waterUser','sewerUser','sewerAndWater','waterFactor_2025','waterFactor_2030','waterFactor_2040',
+                        'sewerFactor_2025','sewerFactor_2030','sewerFactor_2040','zone',
+                        'landUse_2025','landUse_2030','landUse_2040',
+                        'pDeveloped_2025','pDeveloped_2030','pDeveloped_2040',
+                        'waterDemand_2025','waterDemand_2030','waterDemand_2040',
+                        'sewerLoad_2025','sewerLoad_2030','sewerLoad_2040','psBasin','area', 'manuallyUpdatedFlow'], 
+            popupTemplate: {
+                title: "Attributes",
+                content: [{
+                    type: "fields",
+                    fieldInfos:[{
+                        fieldName:"psBasin",
+                        label: "Pump Station Basin",
+                    },{    
+                        fieldName:"waterDemand_2025",
+                        label: "2025 Water Usage (gpd)",
+                        format: {
+                            digitSeparator: true
+                        }
+                    },{
+                        fieldName:"waterDemand_2030",
+                        label: "2030 Water Usage (gpd)",
+                        format: {
+                            digitSeparator: true
+                        }
+                    },{
+                        fieldName:"waterDemand_2040",
+                        label: "2040 Water Usage (gpd)",
+                        format: {
+                            digitSeparator: true
+                        }
+                    },{
+                        fieldName:"sewerLoad_2025",
+                        label: "2025 Wastewater Flow (gpd)",
+                        format: {
+                            digitSeparator: true
+                        }
+                    },{
+                        fieldName:"sewerLoad_2030",
+                        label: "2030 Wastewater Flow (gpd)",
+                        format: {
+                            digitSeparator: true
+                        }
+                    },{
+                        fieldName:"sewerLoad_2040",
+                        label: "2040 Wastewater Flow (gpd)",
+                        format: {
+                            digitSeparator:true
+                        }
+                    },{
+                        fieldName:"waterFactor_2025",
+                        label: "2025 Water Flow Factor (gpd/acre)",
+                        format: {
+                            digitSeparator:true
+                        }
+                    },{
+                        fieldName:"waterFactor_2030",
+                        label: "2030 Water Flow Factor (gpd/acre)",
+                        format: {
+                            digitSeparator:true
+                        }
+                    },{
+                        fieldName:"waterFactor_2040",
+                        label: "2040 Water Flow Factor (gpd/acre)",
+                        format: {
+                            digitSeparator:true
+                        }
+                    },{
+                        fieldName:"sewerFactor_2025",
+                        label: "2025 Wastewater Flow Factor (gpd/acre)",
+                        format: {
+                            digitSeparator:true
+                        }
+                    },{
+                        fieldName:"sewerFactor_2030",
+                        label: "2030 Wastewater Flow Factor (gpd/acre)",
+                        format: {
+                            digitSeparator:true
+                        }
+                    },{
+                        fieldName:"sewerFactor_2040",
+                        label: "2040 Wastewater Flow Factor (gpd/acre)",
+                        format: {
+                            digitSeparator:true
+                        }
+                    },{
+                        fieldName:"landUse_2025",
+                        label: "2025 Zoning",
+                    },{
+                        fieldName:"landUse_2030",
+                        label: "2030 Zoning",
+                    },{
+                        fieldName:"landUse_2040",
+                        label: "2040 Zoning",
+                    },{
+                        fieldName:"pDeveloped_2025",
+                        label: "% Developed 2025"
+                    },{
+                        fieldName:"pDeveloped_2030",
+                        label: "% Developed 2030"
+                    },{
+                        fieldName:"pDeveloped_2040",
+                        label: "% Developed 2040"
+                    },{
+                        fieldName:"manuallyUpdatedFlow",
+                        label: "Flows Manually Entered?"
+                    }
+                ]}],
+            }
+        });
+        
         map.add(sceneLayer);
         sceneLayer.renderer = zoningRenderer
         $('#zoningRadio').prop('checked',true)
@@ -145,6 +281,7 @@ require([
         legendExpand = new Expand({
             view: view,
             content: legend,
+            expanded: true,
             group: "upper_left_expand"
             }); 
         view.ui.add(legendExpand, 'top-left')
@@ -202,10 +339,9 @@ require([
     $("#district").bind('change', function(){
         const selectedDistrict = $("#district option:selected").val();
         const selectedZoning = $("#landUse option:selected").val();
-        console.log(selectedDistrict, selectedZoning);
         const districtQuery = sceneLayer.createQuery();
         if (selectedDistrict != 'All Districts') {
-            districtQuery.where = `districts = '${selectedDistrict}'`;
+            districtQuery.where = `Districts = '${selectedDistrict}'`;
             sceneLayerView.effect = {
                 filter: districtQuery,
                 excludedEffect: "opacity(40%) blur(1.5px) brightness(0.8)",
@@ -221,13 +357,52 @@ require([
         };
     });
 
+    $("#landUse, #district").bind('change', function(){
+        const selectedZone = $("#landUse option:selected").val().split(':')[0];
+        const selectedDistrict = $("#district option:selected").val();
+        const zoneQuery = sceneLayer.createQuery();
+
+        if (selectedDistrict != "All Districts") {
+            zoneQuery.where = `Districts = '${selectedDistrict}' AND Zone ='${selectedZone}'`;
+        }
+        else {
+            zoneQuery.where = `Zone ='${selectedZone}'`
+        }
+
+        sceneLayerView.queryFeatures(zoneQuery).then(function(results){
+            const fieldVals = {'water2025':[],'water2030':[],'water2040':[],'sewer2025':[],'sewer2030':[],'sewer2040':[]};
+            results.features.forEach(function(result){
+                fieldVals['water2025'].push(result.attributes['waterFactor_2025']);
+                fieldVals['water2030'].push(result.attributes['waterFactor_2030']);
+                fieldVals['water2040'].push(result.attributes['waterFactor_2040']);
+                fieldVals['sewer2025'].push(result.attributes['sewerFactor_2025']);
+                fieldVals['sewer2030'].push(result.attributes['sewerFactor_2030']);
+                fieldVals['sewer2040'].push(result.attributes['sewerFactor_2040']);
+            });
+
+            df = new dfd.DataFrame(fieldVals);
+            $("#waterFactor_2025").val(df['water2025'].mode()[0]);
+            $("#waterFactor_2030").val(df['water2030'].mode()[0]);
+            $("#waterFactor_2040").val(df['water2040'].mode()[0]);
+            $("#sewerFactor_2025").val(df['sewer2025'].mode()[0]);
+            $("#sewerFactor_2030").val(df['sewer2030'].mode()[0]);
+            $("#sewerFactor_2040").val(df['sewer2040'].mode()[0]);
+        }).catch(function(){
+            $("#waterFactor_2025").val('');
+            $("#waterFactor_2030").val('');
+            $("#waterFactor_2040").val('');
+            $("#sewerFactor_2025").val('');
+            $("#sewerFactor_2030").val('');
+            $("#sewerFactor_2040").val('');
+        })
+    });
+
     $("#districtResult").bind('change', function(){
         const selectedDistrict = $("#districtResult option:selected").val();
         const selectedZoning = $("#landUse option:selected").val();
-        console.log(selectedDistrict, selectedZoning);
         const districtQuery = sceneLayer.createQuery();
         if (selectedDistrict != 'All Districts') {
-            districtQuery.where = `districts = '${selectedDistrict}'`;
+            districtQuery.where = `Districts = '${selectedDistrict}'`;
             sceneLayerView.effect = {
                 filter: districtQuery,
                 excludedEffect: "opacity(40%) blur(1.5px) brightness(0.8)",
@@ -250,11 +425,12 @@ require([
             basinQuery.where = `psBasin = '${selectedBasin}'`;
             sceneLayerView.effect = {
                 filter: basinQuery,
-                excludedEffect: "opacity(40%) blur(1.5px) brightness(0.8)",
-                includedEffect: "brightness(1.2)"};
+                excludedEffect: "opacity(40%) blur(1.5px) brightness(0.1)",
+                includedEffect: "brightness(1.1)"};
         }
         else {
-            basinQuery.where = `psBasin IS NOT NULL`;
+            basinQuery.where = `Zone is not null`;
+            
             sceneLayerView.effect = {
                 filter: basinQuery,
                 excludedEffect: "opacity(40%) blur(1.5px) brightness(0.8)",
@@ -264,90 +440,130 @@ require([
     };
     
     $('#submitFf').bind('click',function(){
-        $(".progressInfoWindow").toggleClass('slideIn');
-        $("#queryDiv").find('button, checkbox').prop('disabled',true);
-        $(".editArea-container").find('button, input, select').prop('disabled',true);
-        const selectedDistrict = $("#district option:selected").val();
-        const selectedZoning = $("#landUse option:selected").val().split(':')[0];
-        console.log(selectedDistrict, ': ', selectedZoning)
-        const districtQuery = sceneLayer.createQuery();
-        districtQuery.where = `districts = '${selectedDistrict}' AND Zone ='${selectedZoning}'`;
-        // districtQuery.outFields = '*';
-        sceneLayerView.queryFeatures(districtQuery).then(function(results){            
-            var inputs = $('.ffInput'),
-                k  = [].map.call(inputs, function( input ) {
-                    return input.id
-                });
-                v = [].map.call(inputs, function(input){
-                    return input.value
-                });
-        
-                const flowFactorInput = {}
-                k.forEach((fieldname, index) => {
-                    flowFactorInput[fieldname] = v[index]
-                })
-        
-            console.log(flowFactorInput);
+            if( $("#district option:selected").val() != "noSelection"  && $("#landUse option:selected").val() != "noSelection"){
+            $(".progressInfoWindow").toggleClass('slideIn');
+            $("#queryDiv").find('button, checkbox').prop('disabled',true);
+            $(".editArea-container").find('button, input, select').prop('disabled',true);
+            let runTotal = 0;
+            const selectedDistrict = $("#district option:selected").val();
+            const selectedZoning = $("#landUse option:selected").val().split(':')[0];
+            const manuallyUpdated = "false"
+            const districtQuery = sceneLayer.createQuery();
+            districtQuery.where = `Districts = '${selectedDistrict}' AND Zone ='${selectedZoning}' AND manuallyUpdatedFlow = '${manuallyUpdated}'`;
+            districtQuery.outFields = '*';
+            sceneLayerView.queryFeatures(districtQuery).then(function(results){            
+                var inputs = $('.ffInput'),
+                    k  = [].map.call(inputs, function( input ) {
+                        return input.id
+                    });
+                    v = [].map.call(inputs, function(input){
+                        return input.value
+                    });
             
-            ffByLandUse["waterFactor_2025"][selectedZoning] = parseInt(flowFactorInput["waterFactor_2025"])
-            ffByLandUse["waterFactor_2030"][selectedZoning] = parseInt(flowFactorInput["waterFactor_2030"])
-            ffByLandUse["waterFactor_2040"][selectedZoning] = parseInt(flowFactorInput["waterFactor_2040"])
-            ffByLandUse["sewerFactor_2025"][selectedZoning] = parseInt(flowFactorInput["sewerFactor_2025"])
-            ffByLandUse["sewerFactor_2030"][selectedZoning] = parseInt(flowFactorInput["sewerFactor_2030"])
-            ffByLandUse["sewerFactor_2040"][selectedZoning] = parseInt(flowFactorInput["sewerFactor_2040"])
+                    const flowFactorInput = {}
+                    k.forEach((fieldname, index) => {
+                        flowFactorInput[fieldname] = v[index]
+                    })
+                
+                ffByLandUse["waterFactor_2025"][selectedZoning] = parseInt(flowFactorInput["waterFactor_2025"])
+                ffByLandUse["waterFactor_2030"][selectedZoning] = parseInt(flowFactorInput["waterFactor_2030"])
+                ffByLandUse["waterFactor_2040"][selectedZoning] = parseInt(flowFactorInput["waterFactor_2040"])
+                ffByLandUse["sewerFactor_2025"][selectedZoning] = parseInt(flowFactorInput["sewerFactor_2025"])
+                ffByLandUse["sewerFactor_2030"][selectedZoning] = parseInt(flowFactorInput["sewerFactor_2030"])
+                ffByLandUse["sewerFactor_2040"][selectedZoning] = parseInt(flowFactorInput["sewerFactor_2040"])
 
-            var count = 0;
-            var chunk = 1000;
-            const totalIterations = Math.floor(results.features.length/chunk)
-            for (i=0,j=results.features.length; i<j; i+=chunk) {
-                temparray = results.features.slice(i,i+chunk);
-                var updateFeatures = temparray.map(function(feature,i){
-                    esriConfig.request.timeout = 300000;
-                    feature.geometry = null;
-                    feature.attributes["waterFactor_2025"] = flowFactorInput["waterFactor_2025"];
-                    feature.attributes["waterFactor_2030"] = flowFactorInput["waterFactor_2030"];
-                    feature.attributes["waterFactor_2040"] = flowFactorInput["waterFactor_2040"];
-                    feature.attributes["sewerFactor_2025"] = flowFactorInput["sewerFactor_2025"];
-                    feature.attributes["sewerFactor_2030"] = flowFactorInput["sewerFactor_2030"];
-                    feature.attributes["sewerFactor_2040"] = flowFactorInput["sewerFactor_2040"];
-                    feature.attributes["waterDemand_2030"] = Math.round(flowFactorInput["waterFactor_2030"] * feature.attributes["area"] * feature.attributes["pDeveloped_2025"]);
-                    feature.attributes["waterDemand_2025"] = Math.round(flowFactorInput["waterFactor_2025"] * feature.attributes["area"] * feature.attributes["pDeveloped_2030"]);
-                    feature.attributes["waterDemand_2040"] = Math.round(flowFactorInput["waterFactor_2040"] * feature.attributes["area"] * feature.attributes["pDeveloped_2040"]);
-                    feature.attributes["sewerLoad_2025"] =   Math.round(flowFactorInput["sewerFactor_2025"] * feature.attributes["area"] * feature.attributes["pDeveloped_2025"]);
-                    feature.attributes["sewerLoad_2030"] =   Math.round(flowFactorInput["sewerFactor_2030"] * feature.attributes["area"] * feature.attributes["pDeveloped_2030"]);
-                    feature.attributes["sewerLoad_2040"] =   Math.round(flowFactorInput["sewerFactor_2040"] * feature.attributes["area"] * feature.attributes["pDeveloped_2040"]);
-        
-                    return feature
-                });
-                console.log(updateFeatures);
-                console.log(i,j);
-                sceneLayer.applyEdits({
-                    updateFeatures: updateFeatures
-                }).then(function(results){
-                    console.log("update results",results.updateFeatureResults);  
-                    count += 1
-                }).then(function(){  
-                    if (count == totalIterations + 1) {
-                        console.log('done!');
-                        $('.progressInfoWindow').toggleClass('slideIn');
-                        $('#editArea').css('display','none')
-                        $("#queryDiv").find('button, checkbox').prop('disabled',false);
-                        $(".editArea-container").find('button, input, select').prop('disabled',false);    
-                        sceneLayerView.effect = "none";
-                    };
-                }).catch(function(err){
-                    console.log(err)
-                });
-            };
-        });
+                var count = 0;
+                var chunk = 1000;
+                const totalIterations = Math.floor(results.features.length/chunk)
+                for (i=0,j=results.features.length; i<j; i+=chunk) {
+                    temparray = results.features.slice(i,i+chunk);
+                    var updateFeatures = temparray.map(function(feature,i){
+                        esriConfig.request.timeout = 300000;
+                        feature.geometry = null;
+
+                        if (flowFactorInput["waterFactor_2025"] !== null && flowFactorInput["waterFactor_2025"] !== ''){
+                            feature.attributes["waterFactor_2025"] = flowFactorInput["waterFactor_2025"]
+                            feature.attributes["waterDemand_2025"] = Math.round(flowFactorInput["waterFactor_2025"] * feature.attributes["area"] * feature.attributes["pDeveloped_2025"]);
+
+                        }
+
+                        if (flowFactorInput["waterFactor_2030"] !== null && flowFactorInput["waterFactor_2030"] !== ''){
+                            feature.attributes["waterFactor_2030"] = flowFactorInput["waterFactor_2030"];
+                            feature.attributes["waterDemand_2030"] = Math.round(flowFactorInput["waterFactor_2030"] * feature.attributes["area"] * feature.attributes["pDeveloped_2030"]);
+
+                        }
+
+                        if (flowFactorInput["waterFactor_2040"] !== null && flowFactorInput["waterFactor_2040"] !== ''){
+                            feature.attributes["waterFactor_2040"] = flowFactorInput["waterFactor_2040"];
+                            feature.attributes["waterDemand_2040"] = Math.round(flowFactorInput["waterFactor_2040"] * feature.attributes["area"] * feature.attributes["pDeveloped_2040"]);
+
+                        }
+
+                        if (flowFactorInput["sewerFactor_2025"] !== null && flowFactorInput["sewerFactor_2025"] !== ''){
+                            feature.attributes["sewerFactor_2025"] = flowFactorInput["sewerFactor_2025"];
+                            feature.attributes["sewerLoad_2025"] =   Math.round(flowFactorInput["sewerFactor_2025"] * feature.attributes["area"] * feature.attributes["pDeveloped_2025"]);
+
+                        }
+
+                        if (flowFactorInput["sewerFactor_2030"] !== null && flowFactorInput["sewerFactor_2030"] !== ''){
+                            feature.attributes["sewerFactor_2030"] = flowFactorInput["sewerFactor_2030"];
+                            feature.attributes["sewerLoad_2030"] =   Math.round(flowFactorInput["sewerFactor_2030"] * feature.attributes["area"] * feature.attributes["pDeveloped_2030"]);
+
+                        }
+
+                        if (flowFactorInput["sewerFactor_2040"] !== null && flowFactorInput["sewerFactor_2040"] !== ''){
+                            feature.attributes["sewerFactor_2040"] = flowFactorInput["sewerFactor_2040"];
+                            feature.attributes["sewerLoad_2040"] =   Math.round(flowFactorInput["sewerFactor_2040"] * feature.attributes["area"] * feature.attributes["pDeveloped_2040"]);
+
+                        }
+
+                        else{
+                            null
+                        }
+    
+                        return feature
+                    });
+                    console.log(updateFeatures);
+                    console.log(i,j);
+                    sceneLayer.applyEdits({
+                        updateFeatures: updateFeatures
+                    }).then(function(results){
+                        console.log("update results",results.updateFeatureResults.length);  
+                        count += 1
+                    }).then(function(){  
+                        if (count == totalIterations + 1) {
+                            console.log('done!');
+                            $('.progressInfoWindow').toggleClass('slideIn');
+                            $('#editArea').css('display','none')
+                            $("#queryDiv").find('button, checkbox').prop('disabled',false);
+                            $(".editArea-container").find('button, input, select').prop('disabled',false);    
+                            sceneLayerView.effect = "none";
+                        };
+                    }).catch(function(err){
+                        console.log(err)
+                    });
+                };
+            });
+        }
+        else {
+            if( $("#district option:selected").val() == "noSelection"  && $("#landUse option:selected").val() != "noSelection"){
+                alert('No district selected. Please select a district option before proceeding.')
+            }
+            else if( $("#district option:selected").val() != "noSelection"  && $("#landUse option:selected").val() == "noSelection"){
+                alert('No land use selected. Please select a land use before proceeding.')
+            }
+        }
     });
     
     $('#submitLu').bind('click', function(){sceneLayerView.effect="none"}).bind('click', function(){
         $('.progressInfoWindow').toggleClass('slideIn');
         $("#queryDiv").find('button, checkbox').prop('disabled',true);
         $(".editArea-container").find('button, input, select').prop('disabled',true);
+        let runTotal = 0;
+        const manuallyUpdated = "false"
         const query = sceneLayerView.createQuery();
         query.geometry = sketchGeometry;
+        query.where = `manuallyUpdatedFlow = '${manuallyUpdated}'`;
         sceneLayerView.queryFeatures(query).then(function (results) {
             var inputs = $('.luInput'),
             k  = [].map.call(inputs, function( input ) {
@@ -362,29 +578,61 @@ require([
                 landUseInput[fieldname] = v[index]
             })
     
-        console.log(landUseInput);
-
-        var i,j,temparray,chunk = 1000;
+            var i,j,temparray,chunk = 1000;
             for (i=0,j=results.features.length; i<j; i+=chunk) {
             temparray = results.features.slice(i,i+chunk);
             var updateFeatures = temparray.map(function(feature,i){
                 esriConfig.request.timeout = 300000;
                 feature.geometry = null;
-                feature.attributes["waterUser"] = landUseInput["conexYear"]
-                feature.attributes["sewerUser"] = landUseInput["conexYear"]
-                feature.attributes["landUse_2025"] = landUseInput["landUse_2025"];
-                feature.attributes["landUse_2030"] = landUseInput["landUse_2030"];
-                feature.attributes["landUse_2040"] = landUseInput["landUse_2040"];
-                feature.attributes["pDeveloped_2025"] = landUseInput["pDeveloped_2025"];
-                feature.attributes["pDeveloped_2030"] = landUseInput["pDeveloped_2030"];
-                feature.attributes["pDeveloped_2040"] = landUseInput["pDeveloped_2040"];
-                feature.attributes["waterDemand_2030"] = Math.round(feature.attributes["waterFactor_2030"] * feature.attributes["area"] * landUseInput["pDeveloped_2025"]);
-                feature.attributes["waterDemand_2025"] = Math.round(feature.attributes["waterFactor_2025"] * feature.attributes["area"] * landUseInput["pDeveloped_2030"]);
-                feature.attributes["waterDemand_2040"] = Math.round(feature.attributes["waterFactor_2040"] * feature.attributes["area"] * landUseInput["pDeveloped_2040"]);
-                feature.attributes["sewerLoad_2025"] =   Math.round(feature.attributes["sewerFactor_2025"] * feature.attributes["area"] * landUseInput["pDeveloped_2025"]);
-                feature.attributes["sewerLoad_2030"] =   Math.round(feature.attributes["sewerFactor_2030"] * feature.attributes["area"] * landUseInput["pDeveloped_2030"]);
-                feature.attributes["sewerLoad_2040"] =   Math.round(feature.attributes["sewerFactor_2040"] * feature.attributes["area"] * landUseInput["pDeveloped_2040"]);
+                if (landUseInput["conexYear"] !== null && landUseInput["conexYear"] !== ''){
+                    feature.attributes["waterUser"] = landUseInput["conexYear"]
+                    feature.attributes["sewerUser"] = landUseInput["conexYear"]
+                };
+
+                if (landUseInput["landUse_2025"] !== null && landUseInput["landUse_2025"] !== ''){
+                    feature.attributes["landUse_2025"] = landUseInput["landUse_2025"];
+                    feature.attributes["waterDemand_2025"] = Math.round(feature.attributes["waterFactor_2025"] * feature.attributes["area"] * landUseInput["pDeveloped_2025"]);
+                    feature.attributes["sewerLoad_2025"] =   Math.round(feature.attributes["sewerFactor_2025"] * feature.attributes["area"] * landUseInput["pDeveloped_2025"]);
+                };
+
+                if (landUseInput["landUse_2030"] !== null && landUseInput["landUse_2030"] !== ''){
+                    feature.attributes["landUse_2030"] = landUseInput["landUse_2030"];
+                    feature.attributes["waterDemand_2030"] = Math.round(feature.attributes["waterFactor_2030"] * feature.attributes["area"] * landUseInput["pDeveloped_2030"]);
+                    feature.attributes["sewerLoad_2030"] =   Math.round(feature.attributes["sewerFactor_2030"] * feature.attributes["area"] * landUseInput["pDeveloped_2030"]);
+                };
                 
+                if (landUseInput["landUse_2040"] !== null && landUseInput["landUse_2040"] !== ''){
+                    feature.attributes["landUse_2040"] = landUseInput["landUse_2040"];
+                    feature.attributes["waterDemand_2040"] = Math.round(feature.attributes["waterFactor_2040"] * feature.attributes["area"] * landUseInput["pDeveloped_2040"]);
+                    feature.attributes["sewerLoad_2040"] =   Math.round(feature.attributes["sewerFactor_2040"] * feature.attributes["area"] * landUseInput["pDeveloped_2040"]);
+                };
+
+                if (landUseInput["pDeveloped_2025"] !== null && landUseInput["pDeveloped_2025"] !== ''){
+                    feature.attributes["pDeveloped_2025"] = landUseInput["pDeveloped_2025"]
+                }
+                
+                if (landUseInput["pDeveloped_2030"] !== null && landUseInput["pDeveloped_2030"] !== ''){
+                    feature.attributes["pDeveloped_2030"] = landUseInput["pDeveloped_2030"]
+                }
+                
+                if (landUseInput["pDeveloped_2040"] !== null && landUseInput["pDeveloped_2040"] !== ''){
+                    feature.attributes["pDeveloped_2040"] = landUseInput["pDeveloped_2040"]
+                }
+
+                if (landUseInput["manualWaterUsage_2025"] + landUseInput["manualWaterUsage_2030"] + landUseInput["manualWaterUsage_2040"] +
+                    landUseInput["manualSewerUsage_2025"] + landUseInput["manualSewerUsage_2030"] + landUseInput["manualSewerUsage_2040"] > 0) {
+                        feature.attributes["waterDemand_2025"] = landUseInput["manualWaterUsage_2025"];
+                        feature.attributes["waterDemand_2030"] = landUseInput["manualWaterUsage_2030"];
+                        feature.attributes["waterDemand_2040"] = landUseInput["manualWaterUsage_2040"];
+                        feature.attributes["sewerLoad_2025"] = landUseInput["manualSewerUsage_2025"];
+                        feature.attributes["sewerLoad_2030"] = landUseInput["manualSewerUsage_2030"];
+                        feature.attributes["sewerLoad_2040"] = landUseInput["manualSewerUsage_2040"];
+                        feature.attributes["manuallyUpdatedFlow"] = "true"
+                    }
+
+                else {
+                    null
+                }
                 return feature
             });
                 console.log(updateFeatures);
@@ -392,10 +640,10 @@ require([
                 sceneLayer.applyEdits({
                     updateFeatures: updateFeatures
                 }).then(function(results){
-                    console.log("update results",results.updateFeatureResults);    
-                    
-                }).then(function(){
-                    if (j-i <= 1000){
+                    console.log("update results",results.updateFeatureResults.length);    
+                    runTotal += results.updateFeatureResults.length;
+                    console.log(j, runTotal, j - runTotal)
+                    if (j- runTotal < 1){
                         $('.progressInfoWindow').toggleClass('slideIn');
                         $('#editArea').css('display','none')
                         $("#queryDiv").find('button, checkbox').prop('disabled',false);
@@ -407,7 +655,52 @@ require([
                     console.log(err)
                 })
             }
-        })
+        });  
+    });
+
+    $("#resetDefaults").click(function() {
+        $('.progressInfoWindow').toggleClass('slideIn');
+        const query = sceneLayerView.createQuery();
+        query.geometry = sketchGeometry;
+        let runTotal = 0;
+        sceneLayerView.queryFeatures(query).then(function (results) {
+            var i,j,temparray,chunk = 1000;
+                for (i=0,j=results.features.length; i<j; i+=chunk) {
+                temparray = results.features.slice(i,i+chunk);
+                var updateFeatures = temparray.map(function(feature,i){
+                    esriConfig.request.timeout = 300000;
+                    feature.geometry = null;
+                    feature.attributes["waterDemand_2025"] = Math.round(feature.attributes["waterFactor_2025"] * feature.attributes["area"] * feature.attributes["pDeveloped_2025"]);
+                    feature.attributes["waterDemand_2030"] = Math.round(feature.attributes["waterFactor_2030"] * feature.attributes["area"] * feature.attributes["pDeveloped_2030"]);
+                    feature.attributes["waterDemand_2040"] = Math.round(feature.attributes["waterFactor_2040"] * feature.attributes["area"] * feature.attributes["pDeveloped_2040"]);
+                    feature.attributes["sewerLoad_2025"] =   Math.round(feature.attributes["sewerFactor_2025"] * feature.attributes["area"] * feature.attributes["pDeveloped_2025"]);
+                    feature.attributes["sewerLoad_2030"] =   Math.round(feature.attributes["sewerFactor_2030"] * feature.attributes["area"] * feature.attributes["pDeveloped_2030"]);
+                    feature.attributes["sewerLoad_2040"] =   Math.round(feature.attributes["sewerFactor_2040"] * feature.attributes["area"] * feature.attributes["pDeveloped_2040"]);
+                    feature.attributes["manuallyUpdatedFlow"] = "false"
+                    return feature
+                });
+                console.log(updateFeatures);
+                
+                sceneLayer.applyEdits({
+                    updateFeatures: updateFeatures
+                }).then(function(results){
+                    console.log("update results",results.updateFeatureResults.length);    
+                    runTotal += results.updateFeatureResults.length;
+                    console.log(j, runTotal, j - runTotal)
+                    if (j- runTotal < 1){
+                        $('.progressInfoWindow').toggleClass('slideIn');
+                        $('#editArea').css('display','none')
+                        $("#queryDiv").find('button, checkbox').prop('disabled',false);
+                        $(".editArea-container").find('button, input, select').prop('disabled',false);    
+                        sceneLayerView.effect = "none";
+                        clearGeometry();
+                    };
+                }).catch(function(err){
+                    console.log(err)
+                })
+
+            };
+        });
     });
     
     const radios = $('[name = "renderer"]');
@@ -451,8 +744,15 @@ require([
         }
     });
     $("#polygon-geometry-button").bind('click',geometryButtonsClickHandler);
+    $("#polygon-geometry-button").bind('click', function(){
+        view.popup.close()
+    });
+
     $("#point-geometry-button").bind('click',geometryButtonsClickHandler);
-    
+    $("#point-geometry-button").bind('click', function(){
+        view.popup.close()
+    });
+
     function geometryButtonsClickHandler(event) {
         const geometryType = event.target.value;
         clearGeometry();
@@ -460,9 +760,10 @@ require([
     };
     
     $("#clearGeometry").bind("click",clearGeometry);
-    
+    $("#clearGeometry").bind("click",function(){
+        view.popup.close()
+    });
 
-    
     function flowFactorSessionBegin() {
         clearGeometry();
         clearCharts();
@@ -470,14 +771,15 @@ require([
         $('#resultDiv').css('display','none');
         $('#devProjectionsArea').css('display','none');
         $('#devProjectionsArea').css('display','none');
+        view.popup.close();
     };
     
     $('#startForecast').bind('click', flowFactorSessionBegin).bind('click',function(){$('.ffInput').val('')});
-    $('#overallResults').bind('click', function(){console.log('overall results')});
     
     function zoningLandUseSessionBegin() {
         $('#editArea').css('display','none');
         $('#resultDiv').css('display','none');
+        view.popup.close();
         
         if ( $('#developmentForecast').hasClass('disabled') ){
             $('#devProjectionsArea').css('display','none');
@@ -488,7 +790,6 @@ require([
     };
 
     $('#developmentForecast').bind('click', zoningLandUseSessionBegin).bind('click',function(){$('.luInput').val('')});
-    $('#basinResults').bind('click',function(){console.log('metershed results')});
 
     // Clear the geometry and set the default renderer
     function clearGeometry() {
@@ -557,7 +858,6 @@ require([
     function updateSceneLayer() {
         const query = sceneLayerView.createQuery();
         query.geometry = sketchGeometry;
-        // console.log(sceneLayerView.queryObjectIds(query).then(function(objectIds){console.log(objectIds)}))
         return sceneLayerView
         .queryObjectIds(query)
         .then(highlightBuildings);
@@ -566,7 +866,6 @@ require([
     function test() {
     const query = sceneLayerView.createQuery();
     query.geometry = sketchGeometry;
-    console.log(sceneLayerView)
     sceneLayerView.queryFeatures(query).then(function (results) {
         console.log(results)
         results.features.length > 0 ? $('#developmentForecast, #basinResults').removeClass('disabled') : $('#developmentForecast, #basinResults').addClass('disabled');
@@ -642,15 +941,15 @@ require([
             outStatisticFieldName: "waterDemand_2020",
             statisticType: "sum"
         },{
-            onStatisticField: "CASE WHEN waterUser = '2025' THEN waterDemand_2025 ELSE 0 END",
+            onStatisticField: "CASE WHEN waterUser = '2025' or waterUser = '2020' THEN waterDemand_2025 ELSE 0 END",
             outStatisticFieldName: "waterDemand_2025",
             statisticType: "sum"
         },{
-            onStatisticField: "CASE WHEN waterUser = '2030' THEN waterDemand_2030 ELSE 0 END",
+            onStatisticField: "CASE WHEN waterUser = '2030' or waterUser = '2025' or waterUser = '2020' THEN waterDemand_2030 ELSE 0 END",
             outStatisticFieldName: "waterDemand_2030",
             statisticType: "sum"
         },{
-            onStatisticField: "CASE WHEN waterUser = '2040' THEN waterDemand_2040 ELSE 0 END",
+            onStatisticField: "CASE WHEN waterUser = '2040' or waterUser = '2030' or waterUser = '2025' or waterUser = '2020' THEN waterDemand_2040 ELSE 0 END",
             outStatisticFieldName: "waterDemand_2040",
             statisticType: "sum"
         },{
@@ -658,15 +957,15 @@ require([
             outStatisticFieldName: "sewerLoad_2020",
             statisticType: "sum"
         },{
-            onStatisticField: "CASE WHEN sewerUser = '2025' THEN sewerLoad_2025 ELSE 0 END",
+            onStatisticField: "CASE WHEN sewerUser = '2025' or sewerUser = '2020' THEN sewerLoad_2025 ELSE 0 END",
             outStatisticFieldName: "sewerLoad_2025",
             statisticType: "sum"
         },{
-            onStatisticField: "CASE WHEN sewerUser = '2030' THEN sewerLoad_2030 ELSE 0 END",
+            onStatisticField: "CASE WHEN sewerUser = '2030' or sewerUser = '2025' or sewerUser = '2020' THEN sewerLoad_2030 ELSE 0 END",
             outStatisticFieldName: "sewerLoad_2030",
             statisticType: "sum"
         },{
-            onStatisticField: "CASE WHEN sewerUser = '2040' THEN sewerLoad_2040 ELSE 0 END",
+            onStatisticField: "CASE WHEN sewerUser = '2040' or sewerUser = '2030' or sewerUser = '2025' or sewerUser = '2020' THEN sewerLoad_2040 ELSE 0 END",
             outStatisticFieldName: "sewerLoad_2040",
             statisticType: "sum"
         },
@@ -688,15 +987,15 @@ require([
             outStatisticFieldName: "waterDemand_2020",
             statisticType: "sum"
         },{
-            onStatisticField: "CASE WHEN waterUser = '2025' THEN waterDemand_2025 ELSE 0 END",
+            onStatisticField: "CASE WHEN waterUser = '2025' or waterUser = '2020' THEN waterDemand_2025 ELSE 0 END",
             outStatisticFieldName: "waterDemand_2025",
             statisticType: "sum"
         },{
-            onStatisticField: "CASE WHEN waterUser = '2030' THEN waterDemand_2030 ELSE 0 END",
+            onStatisticField: "CASE WHEN waterUser = '2030' or waterUser = '2025' or waterUser = '2020' THEN waterDemand_2030 ELSE 0 END",
             outStatisticFieldName: "waterDemand_2030",
             statisticType: "sum"
         },{
-            onStatisticField: "CASE WHEN waterUser = '2040' THEN waterDemand_2040 ELSE 0 END",
+            onStatisticField: "CASE WHEN waterUser = '2040' or waterUser = '2030' or waterUser = '2025' or waterUser = '2020'THEN waterDemand_2040 ELSE 0 END",
             outStatisticFieldName: "waterDemand_2040",
             statisticType: "sum"
         },{
@@ -704,15 +1003,15 @@ require([
             outStatisticFieldName: "sewerLoad_2020",
             statisticType: "sum"
         },{
-            onStatisticField: "CASE WHEN sewerUser = '2025' THEN sewerLoad_2025 ELSE 0 END",
+            onStatisticField: "CASE WHEN sewerUser = '2025' or sewerUser = '2020' THEN sewerLoad_2025 ELSE 0 END",
             outStatisticFieldName: "sewerLoad_2025",
             statisticType: "sum"
         },{
-            onStatisticField: "CASE WHEN sewerUser = '2030' THEN sewerLoad_2030 ELSE 0 END",
+            onStatisticField: "CASE WHEN sewerUser = '2030' or sewerUser = '2025' or sewerUser = '2020' THEN sewerLoad_2030 ELSE 0 END",
             outStatisticFieldName: "sewerLoad_2030",
             statisticType: "sum"
         },{
-            onStatisticField: "CASE WHEN sewerUser = '2040' THEN sewerLoad_2040 ELSE 0 END",
+            onStatisticField: "CASE WHEN sewerUser = '2040' or sewerUser = '2030' or sewerUser = '2025' or sewerUser = '2020'THEN sewerLoad_2040 ELSE 0 END",
             outStatisticFieldName: "sewerLoad_2040",
             statisticType: "sum"
         },
@@ -720,9 +1019,9 @@ require([
         const selectedDistrict = $("#districtResult option:selected").val();
         const query = sceneLayerView.createQuery();
         if (selectedDistrict == 'All Districts') {
-            query.where = `districts is not null`
+            query.where = `Districts is not null`;
         }else {
-        query.where = `districts = '${selectedDistrict}'`;
+        query.where = `Districts = '${selectedDistrict}'`;
         };
         query.outStatistics = statDefinitions;
 
@@ -739,15 +1038,15 @@ require([
             outStatisticFieldName: "waterDemand_2020",
             statisticType: "sum"
         },{
-            onStatisticField: "CASE WHEN waterUser = '2025' THEN waterDemand_2025 ELSE 0 END",
+            onStatisticField: "CASE WHEN waterUser = '2025' or waterUser = '2020' THEN waterDemand_2025 ELSE 0 END",
             outStatisticFieldName: "waterDemand_2025",
             statisticType: "sum"
         },{
-            onStatisticField: "CASE WHEN waterUser = '2030' THEN waterDemand_2030 ELSE 0 END",
+            onStatisticField: "CASE WHEN waterUser = '2030'  or waterUser = '2025' or waterUser ='2020' THEN waterDemand_2030 ELSE 0 END",
             outStatisticFieldName: "waterDemand_2030",
             statisticType: "sum"
         },{
-            onStatisticField: "CASE WHEN waterUser = '2040' THEN waterDemand_2040 ELSE 0 END",
+            onStatisticField: "CASE WHEN waterUser = '2040' or waterUser = '2030'  or waterUser = '2025' or waterUser ='2020'THEN waterDemand_2040 ELSE 0 END",
             outStatisticFieldName: "waterDemand_2040",
             statisticType: "sum"
         },{
@@ -755,15 +1054,15 @@ require([
             outStatisticFieldName: "sewerLoad_2020",
             statisticType: "sum"
         },{
-            onStatisticField: "CASE WHEN sewerUser = '2025' THEN sewerLoad_2025 ELSE 0 END",
+            onStatisticField: "CASE WHEN sewerUser = '2025' or sewerUser = '2020' THEN sewerLoad_2025 ELSE 0 END",
             outStatisticFieldName: "sewerLoad_2025",
             statisticType: "sum"
         },{
-            onStatisticField: "CASE WHEN sewerUser = '2030' THEN sewerLoad_2030 ELSE 0 END",
+            onStatisticField: "CASE WHEN sewerUser = '2030' or sewerUser = '2025' or sewerUser = '2020' THEN sewerLoad_2030 ELSE 0 END",
             outStatisticFieldName: "sewerLoad_2030",
             statisticType: "sum"
         },{
-            onStatisticField: "CASE WHEN sewerUser = '2040' THEN sewerLoad_2040 ELSE 0 END",
+            onStatisticField: "CASE WHEN sewerUser = '2040' or sewerUser = '2030' or sewerUser = '2025' or sewerUser = '2020' THEN sewerLoad_2040 ELSE 0 END",
             outStatisticFieldName: "sewerLoad_2040",
             statisticType: "sum"
         },
@@ -814,9 +1113,31 @@ require([
             },
             title: {
                 display: true,
-                text: "Total Water Usage"
+                text: "Total Water Usage (gpd)"
             },
-            
+            tooltips: {
+                callbacks: {
+                      label: function(tooltipItem, data) {
+                          var value = data.datasets[0].data[tooltipItem.index];
+                          if(parseInt(value) >= 1000){
+                                     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " gpd";
+                                  } else {
+                                     return value + " gpd";
+                                  }
+                      }
+                }
+            },  
+            plugins: {
+                datalabels: {
+                    formatter: function(value, context) {
+                        if(parseInt(value) >= 1000){
+                            return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                         } else {
+                            return value;
+                         }
+                    },              
+                }
+            },
             scales: {
             yAxes: [{
             ticks: {
@@ -846,12 +1167,12 @@ require([
                 "2040"
             ],
             datasets: [{
-                value: "Total Sewer Usage",
+                value: "Total Wastewater Flow (gpd)",
                 backgroundColor: [
-                    "#2ed9e8",
-                    "#2ed9e8",
-                    "#2ed9e8",
-                    "#2ed9e8",
+                    "#35de9a",
+                    "#35de9a",
+                    "#35de9a",
+                    "#35de9a",
                 ],
                 data: [0,0,0,0]
             }]
@@ -863,9 +1184,31 @@ require([
             },
             title: {
                 display: true,
-                text: "Total Sewer Usage"
+                text: "Total Wastewater Flow (gpd)"
             },
-            
+            tooltips: {
+                callbacks: {
+                      label: function(tooltipItem, data) {
+                          var value = data.datasets[0].data[tooltipItem.index];
+                          if(parseInt(value) >= 1000){
+                                     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " gpd";
+                                  } else {
+                                     return value + " gpd";
+                                  }
+                      }
+                }
+            },  
+            plugins: {
+                datalabels: {
+                    formatter: function(value, context) {
+                        if(parseInt(value) >= 1000){
+                            return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                         } else {
+                            return value;
+                         }
+                    },              
+                }
+            },
             scales: {
             yAxes: [{
             ticks: {
@@ -912,9 +1255,31 @@ require([
             },
             title: {
                 display: true,
-                text: "Total Water Usage"
+                text: "Total Water Usage (gpd)"
             },
-            
+            tooltips: {
+                callbacks: {
+                      label: function(tooltipItem, data) {
+                          var value = data.datasets[0].data[tooltipItem.index];
+                          if(parseInt(value) >= 1000){
+                                     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " gpd";
+                                  } else {
+                                     return value + " gpd";
+                                  }
+                      }
+                }
+            },  
+            plugins: {
+                datalabels: {
+                    formatter: function(value, context) {
+                        if(parseInt(value) >= 1000){
+                            return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                         } else {
+                            return value;
+                         }
+                    },              
+                }
+            },
             scales: {
             yAxes: [{
             ticks: {
@@ -961,9 +1326,31 @@ require([
             },
             title: {
                 display: true,
-                text: "Total Sewer Load"
+                text: "Total Wastewater Flow (gpd)"
             },
-            
+            tooltips: {
+                callbacks: {
+                      label: function(tooltipItem, data) {
+                          var value = data.datasets[0].data[tooltipItem.index];
+                          if(parseInt(value) >= 1000){
+                                     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " gpd";
+                                  } else {
+                                     return value + " gpd";
+                                  }
+                      }
+                }
+            },  
+            plugins: {
+                datalabels: {
+                    formatter: function(value, context) {
+                        if(parseInt(value) >= 1000){
+                            return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                         } else {
+                            return value;
+                         }
+                    },              
+                }
+            },
             scales: {
             yAxes: [{
             ticks: {
@@ -1010,9 +1397,31 @@ require([
             },
             title: {
                 display: true,
-                text: "Total Water Usage"
+                text: "Total Water Usage (gpd)"
             },
-            
+            tooltips: {
+                callbacks: {
+                      label: function(tooltipItem, data) {
+                          var value = data.datasets[0].data[tooltipItem.index];
+                          if(parseInt(value) >= 1000){
+                                     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " gpd";
+                                  } else {
+                                     return value + " gpd";
+                                  }
+                      }
+                }
+            },  
+            plugins: {
+                datalabels: {
+                    formatter: function(value, context) {
+                        if(parseInt(value) >= 1000){
+                            return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                         } else {
+                            return value;
+                         }
+                    },              
+                }
+            },
             scales: {
             yAxes: [{
             ticks: {
@@ -1042,7 +1451,7 @@ require([
                 "2040"
             ],
             datasets: [{
-                value: "Total Water Usage",
+                value: "Total Wastewater Flow",
                 backgroundColor: [
                     "#35de9a",
                     "#35de9a",
@@ -1059,9 +1468,31 @@ require([
             },
             title: {
                 display: true,
-                text: "Total Sewer Load"
+                text: "Total Wastewater Flow (gpd)"
             },
-            
+            tooltips: {
+                callbacks: {
+                      label: function(tooltipItem, data) {
+                          var value = data.datasets[0].data[tooltipItem.index];
+                          if(parseInt(value) >= 1000){
+                                     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " gpd";
+                                  } else {
+                                     return value + " gpd";
+                                  }
+                      }
+                }
+            },  
+            plugins: {
+                datalabels: {
+                    formatter: function(value, context) {
+                        if(parseInt(value) >= 1000){
+                            return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                         } else {
+                            return value;
+                         }
+                    },              
+                }
+            },
             scales: {
             yAxes: [{
             ticks: {
@@ -1094,12 +1525,15 @@ require([
         type: "horizontalBar",
         data: {
             labels: [
-            "Water Service",
-            "No Water Service",
+            "Service",
+            "No Service",
             ],
             datasets: [{
             value: "Water (# Customers)",
-            backgroundColor: "#149dcf",
+            backgroundColor: [
+                "#2ed9e8",
+                "#abc5c7"
+            ],
             stack: "Stack 0",
             data: [0, 0]
             }]
@@ -1113,6 +1547,29 @@ require([
             display: true,
             text: "Water (# Customers)"
             },
+            tooltips: {
+                callbacks: {
+                      label: function(tooltipItem, data) {
+                          var value = data.datasets[0].data[tooltipItem.index];
+                          if(parseInt(value) >= 1000){
+                                     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                                  } else {
+                                     return value;
+                                  }
+                      }
+                }
+            },  
+            plugins: {
+                datalabels: {
+                    formatter: function(value, context) {
+                        if(parseInt(value) >= 1000){
+                            return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                         } else {
+                            return value;
+                         }
+                    },              
+                }
+            },
             scales: {
             xAxes: [{
                 stacked: true,
@@ -1122,7 +1579,10 @@ require([
                 }
             }],
             yAxes: [{
-                stacked: false
+                stacked: false,
+                ticks: {
+                    display: true
+                }
             }]
             }
         }
@@ -1131,66 +1591,82 @@ require([
     
     function createWaterUsageChart() {
     
-    const waterUsageCanvas = document.getElementById('water-usage-chart'); 
-    waterUsageChart = new Chart(waterUsageCanvas.getContext("2d"), {
-        type: "horizontalBar",
-        data: {
-        labels: [
-            "Total Water Usage"
-        ],
-        datasets: [{
-            value: "Total Water Usage in Selection",
-            backgroundColor: "#149dcf",
-            data: [0]
-        }]
-        },
-        options: {
-        responsive: false,
-        legend: {
-            display: false
-        },
-        title: {
-            display: true,
-            text: "Total Water Usage in Selection"
-        },
-        tooltips: {
-        callbacks: {
-                label: function(tooltipItem, data) {
-                    var value = data.datasets[0].data[tooltipItem.index];
-                    if(parseInt(value) >= 1000){
-                                return Math.round(value).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        const waterUsageCanvas = document.getElementById('water-usage-chart'); 
+        waterUsageChart = new Chart(waterUsageCanvas.getContext("2d"), {
+            type: "horizontalBar",
+            data: {
+                labels: ["Total Water Usage (gpd)"],
+                datasets: [{
+                    value: "Total Water Usage in Selection",
+                    backgroundColor: "#2ed9e8",
+                    data: [0]
+                }]
+            },
+            options: {
+                responsive: false,
+                legend: {
+                    display: false
+                },
+                title: {
+                    display: true,
+                    text: "Total Water Usage in Selection (gpd)"
+                },
+                tooltips: {
+                    callbacks: {
+                        label: function(tooltipItem, data) {
+                            var value = data.datasets[0].data[tooltipItem.index];
+                            if(parseInt(value) >= 1000){
+                                        return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " gpd";
+                                    } else {
+                                        return value + " gpd";
+                                    }
+                        }
+                    }
+                },  
+                plugins: {
+                    datalabels: {
+                        formatter: function(value, context) {
+                            if(parseInt(value) >= 1000){
+                                return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
                             } else {
                                 return value;
                             }
+                        },              
+                    }
+                },
+                scales: {
+                    xAxes: [{
+                        ticks: {
+                            beginAtZero: true,
+                            callback: function(value, index, values) {
+                            if(parseInt(value) >= 1000){
+                                return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                            } else {
+                                return value;
+                            }
+                            }
+                        }
+                    }],
+                    yAxes: [{
+                        ticks: {
+                            display: false
+                        }
+                    }]
                 }
-        } // end callbacks:
-        },
-        scales: {
-        xAxes: [{
-        ticks: {
-            beginAtZero: true,
-            callback: function(value, index, values) {
-            if(parseInt(value) >= 1000){
-                return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-            } else {
-                return value;
             }
-            }
-        }
-        }]
-    }
-    }});};
+        });
+    };
     
     function createSewerChart() {
         const sewerCanvas = document.getElementById('sewer-chart');
         sewerChart = new Chart(sewerCanvas.getContext("2d"), {
-        type: "doughnut",
+        type: "horizontalBar",
         data: {
-            labels: ["Sewer", "No Sewer"],
+            labels: ["Service", "No Service"],
             datasets: [{
             backgroundColor: [
-                "#FD7F6F",
-                "#7EB0D5",
+                "#35de9a",
+                "#abc7b6",
             ],
             borderWidth: 0,
             data: [0, 0]
@@ -1198,13 +1674,54 @@ require([
         },
         options: {
             responsive: false,
-            cutoutPercentage: 35,
             legend: {
-            position: "bottom"
+                display: false
             },
             title: {
             display: true,
-            text: "Sewer (# Customers)"
+            text: "Wastewater (# Customers)"
+            },
+            tooltips: {
+                callbacks: {
+                    label: function(tooltipItem, data) {
+                        var value = data.datasets[0].data[tooltipItem.index];
+                        if(parseInt(value) >= 1000){
+                                    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                                } else {
+                                    return value;
+                                }
+                    }
+                }
+            },  
+            plugins: {
+                datalabels: {
+                    formatter: function(value, context) {
+                        if(parseInt(value) >= 1000){
+                            return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                        } else {
+                            return value;
+                        }
+                    },              
+                }
+            },
+            scales: {
+                xAxes: [{
+                    ticks: {
+                        beginAtZero: true,
+                        callback: function(value, index, values) {
+                        if(parseInt(value) >= 1000){
+                            return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                        } else {
+                            return value;
+                        }
+                        }
+                    }
+                }],
+                yAxes: [{
+                    ticks: {
+                        display: true
+                    }
+                }]
             }
         }
         });
@@ -1233,14 +1750,16 @@ require([
     });
     
     $("#overallResults").bind('click', function(){
-        clearCharts()
-        queryOverallResultStats()
+        view.popup.close();
+        clearCharts();
+        queryOverallResultStats();
         $('#overallResultsChartDiv').show();
         $('#basinResultsChartDiv').hide()
         clearGeometry();
         $('#basinResult').prop('selectedIndex',0);
     });
     $("#basinResults").bind('click',function(){
+        view.popup.close();
         clearCharts();
         queryBasinResultStats();
         $('#basinResultsChartDiv').show();
@@ -1307,5 +1826,61 @@ require([
 
     });
 
+
+    $('#pDeveloped_2025, #pDeveloped_2030, #pDeveloped_2040').on('keydown keyup change', function(e){
+        if ($(this).val() > 100 
+            && e.keyCode !== 46 // keycode for delete
+            && e.keyCode !== 8 // keycode for backspace
+           ) {
+           e.preventDefault();
+           $(this).val(100);
+        }
+        else if (e.keyCode == 189 || e.keyCode == 109 || e.keyCode == 187) {
+            e.preventDefault();
+        }
+    });         
+
+    $('#pDeveloped_2030').blur(function(){
+        if ($('#pDeveloped_2030').val() - $("#pDeveloped_2025").val() < 0 && $(this).val() != ''){
+            alert('2030 development percentage is lower than 2025 development percentage. Please correct if this is not desired.');
+        }});
+
+    $('#pDeveloped_2040').blur(function(){
+        if ($('#pDeveloped_2040').val() - $("#pDeveloped_2030").val() < 0 && $(this).val() != ''){
+            alert('2040 development percentage is lower than 2030 development percentage. Please correct if this is not desired.');
+        }
     });
-    
+
+    $('#waterFactor_2025, #waterFactor_2030, #waterFactor_2040, #sewerFactor_2025, #sewerFactor_2030, #sewerFactor_2040').on('keydown keyup change', function (e){
+        if (e.keyCode == 189 || e.keyCode == 109 || e.keyCode == 187) {
+            e.preventDefault();
+        }
+    })
+   
+    $(document).ready(function helpWindowManager(){
+        $("#helpIcon").click(function(){
+            $("#resultDiv, #editArea, #devProjectionsArea, #overallResultsChartDiv, #basinResultsChartDiv").hide();
+            clearGeometry();
+            if( $("#helpWindow").hasClass( "offScreen" ) ) {
+                $("#helpWindow").removeClass( "offScreen" );
+                $("#helpWindow").animate({
+                    right:0
+                }, 700);
+            }
+            else {
+                $("#helpWindow").animate({
+                    right: "-31.5%"
+                }, 700);
+                $("#helpWindow").addClass( "offScreen");
+            }
+        })
+    });
+
+    $("#close-icon-help-window").click(function(){
+        $("#helpWindow").animate({
+            right: "-31.5%"
+        }, 700);
+        $("#helpWindow").addClass( "offScreen");
+    })
+        
+    });
