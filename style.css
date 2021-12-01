@@ -493,3 +493,43 @@ input:checked + .slider .off
  
   margin-right: 1%;
 }
+
+.esri-identity-modal--open {
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+  background: rgba(0,0,0,.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  z-index: 1001;
+  transition: opacity 300ms cubic-bezier(0.4, 0, 0.2, 1) 0s;
+  opacity: 1;
+}
+
+.esri-identity-modal--open .esri-identity-modal__dialog {
+  position: relative;
+  top: auto;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  border: none;
+  background: #fff;
+  overflow: auto;
+  border-radius: 0px;
+  outline: none;
+  padding: 18px 22px;
+  max-width: 40vw;
+  max-height: 80vh;
+  box-sizing: border-box;
+  z-index: 102;
+  text-align: left;
+  display: inline-block;
+  vertical-align: middle;
+  transition: margin-top 300ms cubic-bezier(0.4, 0, 0.2, 1) 0s;
+  margin-top: 0px;
+}
+

@@ -8,15 +8,224 @@ require([
     "esri/widgets/Expand",
     "esri/widgets/Legend",
     "esri/core/promiseUtils",
-    "esri/renderers/UniqueValueRenderer",
-    "esri/renderers/ClassBreaksRenderer",
     "esri/widgets/BasemapToggle",
     "esri/widgets/Search",
     "esri/widgets/Zoom", 
     "esri/tasks/Locator",
+    "esri/identity/IdentityManager",
+    "esri/rest/geoprocessor"
     
     ], function (esriConfig, WebMap, MapView, FeatureLayer, SketchViewModel, GraphicsLayer, Expand, Legend,
-    promiseUtils, UniqueValueRenderer, ClassBreaksRenderer, BasemapToggle, Search, Zoom, Locator) {
+    promiseUtils, BasemapToggle, Search, Zoom, Locator, esriId, geoprocessor) {
+
+    $('#get_content').click(()=>{esriId.getCredential('https://fni.maps.arcgis.com/home/item.html?id=71f618cdbf414cc19663b0fe5f2fef20').then(
+        res=>geoprocessor.submitJob("https://fwgis-web3.freese.com/arcgis/rest/services/Pittsylvania/returnFeatureURL/GPServer/selectFeatureURL",res.userId.toString(),{ returnFeatureCollection: false}))
+        .then(jobInfo => {
+            const jobid = jobInfo.jobId;
+            console.log(jobid)
+            const options = {
+              interval: 1500,
+              statusCallback: (j) => {
+                console.log("Job Status: ", j.jobStatus);
+              }
+            };
+          
+            jobInfo.waitForJobCompletion(options).then(() => {
+                fetch(`https://fwgis-web3.freese.com/arcgis/rest/services/Pittsylvania/returnFeatureURL/GPServer/selectFeatureURL/jobs/${jobid}/results/feature_url?f=pjson`).then(
+                    res => res.json())
+                    .then(
+                        data =>
+                        map.load().then(function () {
+                            sceneLayer = map.allLayers.find(function (layer) {
+                            if (layer.title === "sewer_water_landUse_DEV") {
+                                map.add(layer)
+                                return layer.title === "sewer_water_landUse_DEV"
+                            }
+                            });
+                            map.removeAll();
+                            map.add(sceneLayer);
+                            sceneLayer.outFields = ["*"];
+                            sceneLayer.renderer = zoningRenderer
+                    
+                            $('#developmentForecast').addClass('disabled');
+                            $('#basinResults').addClass('disabled');
+                    
+                            const basemapToggle = new BasemapToggle({
+                            view: view,
+                            content: basemapGalleryDiv,
+                            nextBasemap: 'hybrid',
+                            });
+                        
+                            basemapExpand = new Expand({
+                            view: view,
+                            content: basemapToggle,
+                            group: "upper_left_expand",
+                            expandIconClass: 'esri-icon-basemap'
+                            })
+                    
+                            radioExpand = new Expand({
+                            view: view,
+                            content: paneDiv,
+                            expandIconClass: 'esri-icon-layers',
+                            group: 'upper_left_expand'
+                            });
+                            view.ui.add([basemapExpand, radioExpand], "top-left")
+                            $('#editArea').css('display','none');
+                            $('#devProjectionsArea').css('display','none');
+                    
+                            map.removeAll()
+                            sceneLayer = new FeatureLayer({
+                                url: data.value,
+                                outFields: ['waterUsage','sewerLoad','waterUser','sewerUser','sewerAndWater','waterFactor_2025','waterFactor_2030','waterFactor_2040',
+                                            'sewerFactor_2025','sewerFactor_2030','sewerFactor_2040','zone',
+                                            'landUse_2025','landUse_2030','landUse_2040',
+                                            'pDeveloped_2025','pDeveloped_2030','pDeveloped_2040',
+                                            'waterDemand_2025','waterDemand_2030','waterDemand_2040',
+                                            'sewerLoad_2025','sewerLoad_2030','sewerLoad_2040','psBasin','area', 'manuallyUpdatedFlow'], 
+                                popupTemplate: {
+                                    title: "Attributes",
+                                    content: [{
+                                        type: "fields",
+                                        fieldInfos:[{
+                                            fieldName:"psBasin",
+                                            label: "Pump Station Basin",
+                                        },{    
+                                            fieldName:"waterDemand_2025",
+                                            label: "2025 Water Usage (gpd)",
+                                            format: {
+                                                digitSeparator: true
+                                            }
+                                        },{
+                                            fieldName:"waterDemand_2030",
+                                            label: "2030 Water Usage (gpd)",
+                                            format: {
+                                                digitSeparator: true
+                                            }
+                                        },{
+                                            fieldName:"waterDemand_2040",
+                                            label: "2040 Water Usage (gpd)",
+                                            format: {
+                                                digitSeparator: true
+                                            }
+                                        },{
+                                            fieldName:"sewerLoad_2025",
+                                            label: "2025 Wastewater Flow (gpd)",
+                                            format: {
+                                                digitSeparator: true
+                                            }
+                                        },{
+                                            fieldName:"sewerLoad_2030",
+                                            label: "2030 Wastewater Flow (gpd)",
+                                            format: {
+                                                digitSeparator: true
+                                            }
+                                        },{
+                                            fieldName:"sewerLoad_2040",
+                                            label: "2040 Wastewater Flow (gpd)",
+                                            format: {
+                                                digitSeparator:true
+                                            }
+                                        },{
+                                            fieldName:"waterFactor_2025",
+                                            label: "2025 Water Flow Factor (gpd/acre)",
+                                            format: {
+                                                digitSeparator:true
+                                            }
+                                        },{
+                                            fieldName:"waterFactor_2030",
+                                            label: "2030 Water Flow Factor (gpd/acre)",
+                                            format: {
+                                                digitSeparator:true
+                                            }
+                                        },{
+                                            fieldName:"waterFactor_2040",
+                                            label: "2040 Water Flow Factor (gpd/acre)",
+                                            format: {
+                                                digitSeparator:true
+                                            }
+                                        },{
+                                            fieldName:"sewerFactor_2025",
+                                            label: "2025 Wastewater Flow Factor (gpd/acre)",
+                                            format: {
+                                                digitSeparator:true
+                                            }
+                                        },{
+                                            fieldName:"sewerFactor_2030",
+                                            label: "2030 Wastewater Flow Factor (gpd/acre)",
+                                            format: {
+                                                digitSeparator:true
+                                            }
+                                        },{
+                                            fieldName:"sewerFactor_2040",
+                                            label: "2040 Wastewater Flow Factor (gpd/acre)",
+                                            format: {
+                                                digitSeparator:true
+                                            }
+                                        },{
+                                            fieldName:"landUse_2025",
+                                            label: "2025 Zoning",
+                                        },{
+                                            fieldName:"landUse_2030",
+                                            label: "2030 Zoning",
+                                        },{
+                                            fieldName:"landUse_2040",
+                                            label: "2040 Zoning",
+                                        },{
+                                            fieldName:"pDeveloped_2025",
+                                            label: "% Developed 2025"
+                                        },{
+                                            fieldName:"pDeveloped_2030",
+                                            label: "% Developed 2030"
+                                        },{
+                                            fieldName:"pDeveloped_2040",
+                                            label: "% Developed 2040"
+                                        },{
+                                            fieldName:"manuallyUpdatedFlow",
+                                            label: "Flows Manually Entered?"
+                                        }
+                                    ]}],
+                                }
+                            });
+                            
+                            map.add(sceneLayer);
+                            sceneLayer.renderer = zoningRenderer
+                            $('#zoningRadio').prop('checked',true)
+                            view.whenLayerView(sceneLayer).then((layerView) => {sceneLayerView = layerView;});
+                            
+                            $('#startForecast').prop('disabled',false);
+                            $('#tooltiptextid').prop('hidden',true);
+                            $('startForecastDiv').removeClass('tooltip');
+                            // view.ui.remove(legendExpand)
+                            const legend = new Legend({
+                                view: view,
+                                layerInfos: [{
+                                    layer: sceneLayer,
+                                    title: 'Pittsylvania County Utilities Dashboard Legend'
+                                }]
+                            });
+                    
+                            legendExpand = new Expand({
+                                view: view,
+                                content: legend,
+                                expanded: true,
+                                group: "upper_left_expand"
+                                }); 
+                            view.ui.add(legendExpand, 'top-left')
+                        
+                        })
+                    )
+                    .then(()=>
+                        geoprocessor.submitJob("https://fwgis-web3.freese.com/arcgis/rest/services/Pittsylvania/cloneFeatureService/GPServer/cloneFeatureService",{ returnFeatureCollection: false})
+                        .then(jobInfo => {
+                            const jobid = jobInfo.jobId;
+                            console.log(jobid)
+                        }))
+            })
+          })
+        .then(
+            ()=>{$('#signInPopup').remove()}
+        )})
+
     const landUses = ['A-1: Agricultural', 'RE: Residential Estates', 'R-1: Suburban Sudivision', 'RMF: Multi-Family', 'RPD: Planned Unit Development',
                       'MHP: Manufactured Housing Park', 'RC-1: Combined Subdivision', 'B-1: Business (Limited)', 'B-2: Business (General)', 'M-1: Light Industry', 'M-2: Heavy Industry',
                       'C-1: Conservation', 'DZ: Double Zoned', 'TZ: Town', 'UK: Unknown'];
@@ -87,7 +296,6 @@ require([
     };
     
     //Generates renderers based on the input field name.
-    
     function getRenderer(fieldName) {
         // If the renderer is already generated, then return it
         if (renderersByField[fieldName]) {
@@ -108,185 +316,8 @@ require([
         }
     };
     
-    map.load().then(function () {
-        sceneLayer = map.allLayers.find(function (layer) {
-        if (layer.title === "sewer_water_landUse") {
-            map.add(layer)
-            return layer.title === "sewer_water_landUse"
-        }
-        });
     
-        map.removeAll();
-        map.add(sceneLayer);
-        sceneLayer.outFields = ["*"];
-        sceneLayer.renderer = zoningRenderer
-
-        $('#developmentForecast').addClass('disabled');
-        $('#basinResults').addClass('disabled');
-
-        const basemapToggle = new BasemapToggle({
-        view: view,
-        content: basemapGalleryDiv,
-        nextBasemap: 'hybrid',
-        });
     
-        basemapExpand = new Expand({
-        view: view,
-        content: basemapToggle,
-        group: "upper_left_expand",
-        expandIconClass: 'esri-icon-basemap'
-        })
-
-        radioExpand = new Expand({
-        view: view,
-        content: paneDiv,
-        expandIconClass: 'esri-icon-layers',
-        group: 'upper_left_expand'
-        });
-        view.ui.add([basemapExpand, radioExpand], "top-left")
-        $('#editArea').css('display','none');
-        $('#devProjectionsArea').css('display','none');
-
-        map.removeAll()
-        sceneLayer = new FeatureLayer({
-            url: "https://services.arcgis.com/t6fsA0jUdL7JkKG2/arcgis/rest/services/SewerWaterLanduse_Dev/FeatureServer",
-            outFields: ['waterUsage','sewerLoad','waterUser','sewerUser','sewerAndWater','waterFactor_2025','waterFactor_2030','waterFactor_2040',
-                        'sewerFactor_2025','sewerFactor_2030','sewerFactor_2040','zone',
-                        'landUse_2025','landUse_2030','landUse_2040',
-                        'pDeveloped_2025','pDeveloped_2030','pDeveloped_2040',
-                        'waterDemand_2025','waterDemand_2030','waterDemand_2040',
-                        'sewerLoad_2025','sewerLoad_2030','sewerLoad_2040','psBasin','area', 'manuallyUpdatedFlow'], 
-            popupTemplate: {
-                title: "Attributes",
-                content: [{
-                    type: "fields",
-                    fieldInfos:[{
-                        fieldName:"psBasin",
-                        label: "Pump Station Basin",
-                    },{    
-                        fieldName:"waterDemand_2025",
-                        label: "2025 Water Usage (gpd)",
-                        format: {
-                            digitSeparator: true
-                        }
-                    },{
-                        fieldName:"waterDemand_2030",
-                        label: "2030 Water Usage (gpd)",
-                        format: {
-                            digitSeparator: true
-                        }
-                    },{
-                        fieldName:"waterDemand_2040",
-                        label: "2040 Water Usage (gpd)",
-                        format: {
-                            digitSeparator: true
-                        }
-                    },{
-                        fieldName:"sewerLoad_2025",
-                        label: "2025 Wastewater Flow (gpd)",
-                        format: {
-                            digitSeparator: true
-                        }
-                    },{
-                        fieldName:"sewerLoad_2030",
-                        label: "2030 Wastewater Flow (gpd)",
-                        format: {
-                            digitSeparator: true
-                        }
-                    },{
-                        fieldName:"sewerLoad_2040",
-                        label: "2040 Wastewater Flow (gpd)",
-                        format: {
-                            digitSeparator:true
-                        }
-                    },{
-                        fieldName:"waterFactor_2025",
-                        label: "2025 Water Flow Factor (gpd/acre)",
-                        format: {
-                            digitSeparator:true
-                        }
-                    },{
-                        fieldName:"waterFactor_2030",
-                        label: "2030 Water Flow Factor (gpd/acre)",
-                        format: {
-                            digitSeparator:true
-                        }
-                    },{
-                        fieldName:"waterFactor_2040",
-                        label: "2040 Water Flow Factor (gpd/acre)",
-                        format: {
-                            digitSeparator:true
-                        }
-                    },{
-                        fieldName:"sewerFactor_2025",
-                        label: "2025 Wastewater Flow Factor (gpd/acre)",
-                        format: {
-                            digitSeparator:true
-                        }
-                    },{
-                        fieldName:"sewerFactor_2030",
-                        label: "2030 Wastewater Flow Factor (gpd/acre)",
-                        format: {
-                            digitSeparator:true
-                        }
-                    },{
-                        fieldName:"sewerFactor_2040",
-                        label: "2040 Wastewater Flow Factor (gpd/acre)",
-                        format: {
-                            digitSeparator:true
-                        }
-                    },{
-                        fieldName:"landUse_2025",
-                        label: "2025 Zoning",
-                    },{
-                        fieldName:"landUse_2030",
-                        label: "2030 Zoning",
-                    },{
-                        fieldName:"landUse_2040",
-                        label: "2040 Zoning",
-                    },{
-                        fieldName:"pDeveloped_2025",
-                        label: "% Developed 2025"
-                    },{
-                        fieldName:"pDeveloped_2030",
-                        label: "% Developed 2030"
-                    },{
-                        fieldName:"pDeveloped_2040",
-                        label: "% Developed 2040"
-                    },{
-                        fieldName:"manuallyUpdatedFlow",
-                        label: "Flows Manually Entered?"
-                    }
-                ]}],
-            }
-        });
-        
-        map.add(sceneLayer);
-        sceneLayer.renderer = zoningRenderer
-        $('#zoningRadio').prop('checked',true)
-        view.whenLayerView(sceneLayer).then((layerView) => {sceneLayerView = layerView;});
-        
-        $('#startForecast').prop('disabled',false);
-        $('#tooltiptextid').prop('hidden',true);
-        $('startForecastDiv').removeClass('tooltip');
-        // view.ui.remove(legendExpand)
-        const legend = new Legend({
-            view: view,
-            layerInfos: [{
-                layer: sceneLayer,
-                title: 'Pittsylvania County Utilities Dashboard Legend'
-            }]
-        });
-
-        legendExpand = new Expand({
-            view: view,
-            content: legend,
-            expanded: true,
-            group: "upper_left_expand"
-            }); 
-        view.ui.add(legendExpand, 'top-left')
-    
-    });
     
     dropdownContainer = document.getElementById('district');
     for (var i = 0; i< districts.length; i++) {
@@ -838,14 +869,6 @@ require([
         }
         console.error(error);
         })
-    };
-    var highlightHandle = null;
-    
-    function clearHighlighting() {
-        if (highlightHandle) {
-        highlightHandle.remove();
-        highlightHandle = null;
-        }
     };
     
     function highlightBuildings(objectIds) {
