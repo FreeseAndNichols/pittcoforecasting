@@ -18,6 +18,9 @@ require([
     ], function (esriConfig, WebMap, MapView, FeatureLayer, SketchViewModel, GraphicsLayer, Expand, Legend,
     promiseUtils, BasemapToggle, Search, Zoom, Locator, esriId, geoprocessor) {
 
+    //detects refresh and page close
+    $(window).on("unload",()=>{console.log('unloading')})
+
     $('#get_content').click(()=>{esriId.getCredential('https://fni.maps.arcgis.com/home/item.html?id=71f618cdbf414cc19663b0fe5f2fef20').then(
         res=>geoprocessor.submitJob("https://fwgis-web3.freese.com/arcgis/rest/services/Pittsylvania/returnFeatureURL/GPServer/selectFeatureURL",res.userId.toString(),{ returnFeatureCollection: false}))
         .then(jobInfo => {
@@ -215,7 +218,7 @@ require([
                         })
                     )
                     .then(()=>
-                        geoprocessor.submitJob("https://fwgis-web3.freese.com/arcgis/rest/services/Pittsylvania/cloneFeatureService/GPServer/cloneFeatureService",{ returnFeatureCollection: false})
+                        geoprocessor.submitJob("https://fwgis-web3.freese.com/arcgis/rest/services/Pittsylvania/cloneFeatureService/GPServer/cloneFeatureService")
                         .then(jobInfo => {
                             const jobid = jobInfo.jobId;
                             console.log(jobid)
