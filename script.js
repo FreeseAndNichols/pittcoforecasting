@@ -17,15 +17,12 @@ require([
     
     ], function (esriConfig, WebMap, MapView, FeatureLayer, SketchViewModel, GraphicsLayer, Expand, Legend,
     promiseUtils, BasemapToggle, Search, Zoom, Locator, esriId, geoprocessor) {
-
-    //detects refresh and page close
-    $(window).on("unload",()=>{console.log('unloading')})
+     
 
     $('#get_content').click(()=>{esriId.getCredential('https://fni.maps.arcgis.com/home/item.html?id=71f618cdbf414cc19663b0fe5f2fef20').then(
-        res=>geoprocessor.submitJob("https://fwgis-web3.freese.com/arcgis/rest/services/Pittsylvania/returnFeatureURL/GPServer/selectFeatureURL",res.userId.toString(),{ returnFeatureCollection: false}))
+        res=>geoprocessor.submitJob("https://fwgis-web3.freese.com/arcgis/rest/services/Pittsylvania/returnFeatureServiceID/GPServer/returnFeatureServiceID",res.userId.toString(),{ returnFeatureCollection: false}))
         .then(jobInfo => {
             const jobid = jobInfo.jobId;
-            console.log(jobid)
             const options = {
               interval: 1500,
               statusCallback: (j) => {
@@ -34,7 +31,7 @@ require([
             };
           
             jobInfo.waitForJobCompletion(options).then(() => {
-                fetch(`https://fwgis-web3.freese.com/arcgis/rest/services/Pittsylvania/returnFeatureURL/GPServer/selectFeatureURL/jobs/${jobid}/results/feature_url?f=pjson`).then(
+                fetch(`https://fwgis-web3.freese.com/arcgis/rest/services/Pittsylvania/returnFeatureServiceID/GPServer/returnFeatureServiceID/jobs/${jobid}/results/feature_url?f=pjson`).then(
                     res => res.json())
                     .then(
                         data =>
@@ -217,17 +214,34 @@ require([
                         
                         })
                     )
-                    .then(()=>
-                        geoprocessor.submitJob("https://fwgis-web3.freese.com/arcgis/rest/services/Pittsylvania/cloneFeatureService/GPServer/cloneFeatureService")
-                        .then(jobInfo => {
-                            const jobid = jobInfo.jobId;
-                            console.log(jobid)
-                        }))
             })
+            .then(() => fetch(`https://fwgis-web3.freese.com/arcgis/rest/services/Pittsylvania/returnFeatureServiceID/GPServer/returnFeatureServiceID/jobs/${jobid}/results/feature_id?f=pjson`).then(
+                    res => res.json()
+                    .then(
+                        data => {
+                            window.addEventListener('beforeunload', function (e) {
+                                console.log(data)
+                                fetch(`https://fwgis-web3.freese.com/arcgis/rest/services/Pittsylvania/updateTimestamp/GPServer/updateFeatureTimestamp/execute?item_id=${data.value}%0D%0A&env%3AoutSR=&env%3AprocessSR=&returnZ=false&returnM=false&returnTrueCurves=false&returnFeatureCollection=false&context=&f=pjson`)
+                                // // Cancel the event
+                                e.preventDefault(); // If you prevent default behavior in Mozilla Firefox prompt will always be shown
+                                // // Chrome requires returnValue to be set
+                                e.returnValue = '';
+                              })
+                        }        
+                    )
+                )
+            )
           })
         .then(
             ()=>{$('#signInPopup').remove()}
-        )})
+        )
+        // .then(()=>
+        // geoprocessor.submitJob("https://fwgis-web3.freese.com/arcgis/rest/services/Pittsylvania/cloneFeatureService/GPServer/cloneFeatureService")
+        // .then(jobInformation => {
+        //     const jobid2 = jobInformation.jobId;
+        //     console.log(jobid2)}
+        // ))
+    })
 
     const landUses = ['A-1: Agricultural', 'RE: Residential Estates', 'R-1: Suburban Sudivision', 'RMF: Multi-Family', 'RPD: Planned Unit Development',
                       'MHP: Manufactured Housing Park', 'RC-1: Combined Subdivision', 'B-1: Business (Limited)', 'B-2: Business (General)', 'M-1: Light Industry', 'M-2: Heavy Industry',
@@ -273,7 +287,6 @@ require([
         includeDefaultSources: false
       });
 
-
     view.ui.add(search, "top-left");
     var zoom = new Zoom({
         view: view
@@ -318,9 +331,6 @@ require([
         return utilitiesRender
         }
     };
-    
-    
-    
     
     dropdownContainer = document.getElementById('district');
     for (var i = 0; i< districts.length; i++) {
