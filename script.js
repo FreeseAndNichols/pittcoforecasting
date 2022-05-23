@@ -234,12 +234,6 @@ require([
           })
         .then(() => {
             fetch('insert gp tool URL here!!!!!!') 
-            console.log("------------------------------------------------------------------------------------------------------------------------------------------------------")
-            console.log("Hello, Ryan! If you're reading this, I'm gone now. It's been a fun year and some-odd months working together. Not to inflate your ego, but you're one of the smartest people I've ever worked with.")
-            console.log("Also easily the most enjoyable person I've worked with. I definitely consider you a friend and am happy we got some time to work together! ")
-            console.log("-Logan")
-            console.log('P.S. please delete these lines before deployment. Would hate for someone at Pittsylvania named Ryan to get the wrong idea.')
-            console.log("------------------------------------------------------------------------------------------------------------------------------------------------------")
         })
         .then(
             ()=>{$('#signInPopup').remove()}
