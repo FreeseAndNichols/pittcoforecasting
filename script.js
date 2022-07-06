@@ -207,7 +207,6 @@ require([
                             legendExpand = new Expand({
                                 view: view,
                                 content: legend,
-                                expanded: true,
                                 group: "upper_left_expand"
                                 }); 
                             view.ui.add(legendExpand, 'top-left')
@@ -220,7 +219,6 @@ require([
                     .then(
                         data => {
                             window.addEventListener('beforeunload', function (e) {
-                                console.log(data)
                                 fetch(`https://fwgis-web3.freese.com/arcgis/rest/services/Pittsylvania/updateTimestamp/GPServer/updateFeatureTimestamp/execute?item_id=${data.value}%0D%0A&env%3AoutSR=&env%3AprocessSR=&returnZ=false&returnM=false&returnTrueCurves=false&returnFeatureCollection=false&context=&f=pjson`)
                                 // // Cancel the event
                                 e.preventDefault(); // If you prevent default behavior in Mozilla Firefox prompt will always be shown
@@ -232,9 +230,9 @@ require([
                 )
             )
           })
-        .then(() => {
-            fetch('insert gp tool URL here!!!!!!') 
-        })
+        // .then(() => {
+        //     fetch('insert gp tool URL here!!!!!!') 
+        // })
         .then(
             ()=>{$('#signInPopup').remove()}
         )
@@ -565,16 +563,12 @@ require([
     
                         return feature
                     });
-                    console.log(updateFeatures);
-                    console.log(i,j);
                     sceneLayer.applyEdits({
                         updateFeatures: updateFeatures
                     }).then(function(results){
-                        console.log("update results",results.updateFeatureResults.length);  
                         count += 1
                     }).then(function(){  
                         if (count == totalIterations + 1) {
-                            console.log('done!');
                             $('.progressInfoWindow').toggleClass('slideIn');
                             $('#editArea').css('display','none')
                             $("#queryDiv").find('button, checkbox').prop('disabled',false);
@@ -582,7 +576,6 @@ require([
                             sceneLayerView.effect = "none";
                         };
                     }).catch(function(err){
-                        console.log(err)
                     });
                 };
             });
@@ -677,14 +670,11 @@ require([
                 }
                 return feature
             });
-                console.log(updateFeatures);
 
                 sceneLayer.applyEdits({
                     updateFeatures: updateFeatures
                 }).then(function(results){
-                    console.log("update results",results.updateFeatureResults.length);    
                     runTotal += results.updateFeatureResults.length;
-                    console.log(j, runTotal, j - runTotal)
                     if (j- runTotal < 1){
                         $('.progressInfoWindow').toggleClass('slideIn');
                         $('#editArea').css('display','none')
@@ -721,14 +711,11 @@ require([
                     feature.attributes["manuallyUpdatedFlow"] = "false"
                     return feature
                 });
-                console.log(updateFeatures);
                 
                 sceneLayer.applyEdits({
                     updateFeatures: updateFeatures
                 }).then(function(results){
-                    console.log("update results",results.updateFeatureResults.length);    
                     runTotal += results.updateFeatureResults.length;
-                    console.log(j, runTotal, j - runTotal)
                     if (j- runTotal < 1){
                         $('.progressInfoWindow').toggleClass('slideIn');
                         $('#editArea').css('display','none')
@@ -901,7 +888,6 @@ require([
     const query = sceneLayerView.createQuery();
     query.geometry = sketchGeometry;
     sceneLayerView.queryFeatures(query).then(function (results) {
-        console.log(results)
         results.features.length > 0 ? $('#developmentForecast, #basinResults').removeClass('disabled') : $('#developmentForecast, #basinResults').addClass('disabled');
         })
     };
